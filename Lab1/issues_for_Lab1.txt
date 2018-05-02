@@ -1,0 +1,9 @@
+After discussed with TAs, we get three main issues for our lab1:
+
+1. Small problems to the architecture (Eline)
+
+2. Communicating rates from PC to drone and also drone to PC.
+
+3. How to solve the problems what if the header is missing and another byte is the same as header, which is treated as "header" (It will lead to the wrong start of the packet)?
+
+4. Implementation of the protocol.
