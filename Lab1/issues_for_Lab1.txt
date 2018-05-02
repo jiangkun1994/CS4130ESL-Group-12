@@ -2,7 +2,7 @@ After discussion with TAs, we get three main issues for our lab1:
 
 1. Redrawing system architecture (Eline)
 
-2. Communicating rates :- 
+2. Communicating rates:
 -> PC to drone
 -> Drone to PC
 
