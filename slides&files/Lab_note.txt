@@ -1,0 +1,92 @@
+2016-2017 In4073 Lab Activities Timeline
+========================================
+
+This is a general plan that should not be followed to the letter,
+but is intended to serve as a general guideline.
+It lists the most important lab milestones.
+
+
+
+# Preparation (BEFORE 1st lab):
+-------------------------------
+1. Familiarize with HW
+   	-setup your toolchain
+	-compile and upload the provided code
+
+2. Protocol design and implementation on the flight controller board
+
+
+# 1st lab:
+----------
+1. Familiarize with HW
+	-connect joystick and execute js demo code (from resources page).
+	-motor control
+
+2. Test protocol
+
+3. Implement manual mode
+
+
+# 2nd lab:
+----------
+1. Demonstrate protocol
+
+2. Test manual mode
+
+3. Implement data logging
+
+
+# 3rd lab:
+----------
+1. Demonstrate manual mode
+
+2. Test data logging
+
+3. Implement calibration
+
+4. Implement yaw control (DMP)
+
+
+# 4th lab:
+----------
+1. Test and demonstrate yaw mode
+
+2. Implement roll and pitch control (DMP)
+
+3. Start on filters (Butterworth 1st order, Kalman)
+
+4. Profile your code!
+
+
+# 5th lab:
+----------
+1. Test and demonstrate full control using DMP
+
+2. Test Kalman filter
+
+3. Implement height control
+
+4. Implement wireless
+
+
+# 6th lab:
+----------
+1. Test full control using Kalman
+
+2. Test height control
+
+3. Test wireless
+ 
+
+# 7th lab:
+----------
+1. Preliminary demonstration + free advice
+
+2. fine tuning
+
+3. Profile your code!
+
+
+# 8th lab:
+----------
+1. Formal demonstration and grading
