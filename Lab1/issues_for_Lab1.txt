@@ -1,11 +1,11 @@
-After discussion with TAs, we get three main issues for our lab1:
+After discussion with TAs, Lab_1 feedback:
 
 1. Redrawing system architecture (Eline)
 
-2. Communicating rates:
--> PC to drone
+2. Communicating rates(somewhere in this range: 1 Hz(too slow drone will crash!) - 100 Hz(control loop execution))
+-> PC to drone 
 -> Drone to PC
 
 3. How to solve the problems what if the header is missing and another byte is the same as header, which is treated as "header" (It will lead to the wrong start of the packet)?
 
-4. Implementation of the protocol.
+4. Implementation of the communication protocol.
