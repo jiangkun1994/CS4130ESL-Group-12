@@ -1,0 +1,27 @@
+1byte | 1byte | 1byte | 1byte | 1byte | 1byte | 1byte | 1byte |
+------|-------|-------|-------|-------|-------|-------|-------|
+Header|length | mode  | lift  | yaw   | roll  | pitch | CRC   |   NOTE: if we want to transmit the PID, we can replace the "lift", "yaw", "roll" and "pitch" into "P"
+
+
+Header| length | mode | batterty | x | y | z | barometer | CRC |
+
+#define HEADER 0x80
+
+**Mode**
+#define safe_mode 0x01
+
+Transmit: 0x01|0x02|0x23|0x34|0x14(0011 0100)   Receive: 0x01|0x03|0x23|0x34|0x15(0001 0101)
+
+0000 0001                                        0000 0001
+0000 0010                                        0000 0011
+0010 0011                                        0010 0011
+0011 0100                                        0011 0100
+----------                                      -----------
+0001 0100                                        0001 0101
+
+
+the packet from pc to drone is transmitted every 100ms and if the drone does not receive a packet for 400ms, it will go to the panic mode.
+
+Data log rate: 10Hz
+
+
