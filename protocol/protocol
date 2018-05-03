@@ -8,7 +8,9 @@ Header|length | mode  | lift  | yaw   | roll  | pitch | CRC   |   NOTE: if we wa
 
 DRONE TO PC ->
 
-Header| length | mode | batterty | x | y | z | barometer | CRC |
+1byte | 1byte  | 1byte| 1byte    | 3bytes    | 1byte     | 1byte |
+------|--------|------|----------|-----------|-----------|-------|
+Header| length | mode | batterty | x | y | z | barometer | CRC   |     (Need to send back time_stamp, how many bytes for it?)
 
 
 #define HEADER 0x80
@@ -27,6 +29,11 @@ Transmit: 0x01|0x02|0x23|0x34|0x14(0011 0100)   Receive: 0x01|0x03|0x23|0x34|0x1
 0011 0100                                        0011 0100
 ----------                                      -----------
 0001 0100                                        0001 0101
+
+
+****The implementation of CRC16****
+https://stackoverflow.com/questions/10564491/function-to-calculate-a-crc16-checksum
+
 
 
 ****Communication rate****
