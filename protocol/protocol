@@ -10,10 +10,14 @@ DRONE TO PC ->
 
 Header| length | mode | batterty | x | y | z | barometer | CRC |
 
+
 #define HEADER 0x80
 
 **Mode**
 #define safe_mode 0x01
+
+
+****The implementation of XOR****
 
 Transmit: 0x01|0x02|0x23|0x34|0x14(0011 0100)   Receive: 0x01|0x03|0x23|0x34|0x15(0001 0101)
 
@@ -25,6 +29,7 @@ Transmit: 0x01|0x02|0x23|0x34|0x14(0011 0100)   Receive: 0x01|0x03|0x23|0x34|0x1
 0001 0100                                        0001 0101
 
 
+****Communication rate****
 the packet from pc to drone is transmitted every 100ms and if the drone does not receive a packet for 400ms, it will go to the panic mode.
 
 Data log rate: 10Hz
