@@ -1,11 +1,11 @@
 # Notes for the Lab1
-We were working on the assignment for Lab1 on Friday (04/05/2018). The progress is as following. (**The code modified has been uploaded to the branch Lab1 on GitHub**)
+We were working on the assignment for Lab1 on Friday (04/05/2018). The progress is as following. (**The codes modified have been uploaded to the branch Lab1 on GitHub**)
 
 ## What we have done
 - We have solved the problem that what if the header is missing and another byte is considered as the "header".
   - First bit of each byte is reserved, as only the header sets this bit to 1.
 
-- We have implemented the CRC check successfully. The PC side transmit the data with its CRC check and also the board side can calculate the its CRC check based on the data transmitted.
+- We have implemented the CRC check successfully. The PC side transmits the data with its CRC check and also the board side can calculate the its CRC check based on the data transmitted.
 
 - We have created the **protocol.c** and **protocol.h**, where we implemented the `create_packet` function.
 
