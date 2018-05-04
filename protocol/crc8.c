@@ -2,10 +2,10 @@
 #include <inttypes.h>
 unsigned char crc_high_first(unsigned char *ptr, unsigned char len);
 
-uint8_t ss = 0x71;
+uint8_t ss[2] = {0x71,0xAB};
 int main()
 {
-   printf("CRC : %d\n", crc_high_first(&ss,1));
+   printf("CRC : %d\n", crc_high_first(ss,2));
    return 0;
 }
 
