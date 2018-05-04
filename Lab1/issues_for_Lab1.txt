@@ -6,6 +6,6 @@ After discussion with TAs, Lab_1 feedback:
 -> PC to drone 
 -> Drone to PC
 
-3. How to solve the problems what if the header is missing and another byte is the same as header, which is treated as "header" (It will lead to the wrong start of the packet)?
+3. How to solve the problem: what if the header is missing and another byte is the same as header, which is treated as "header" (It will lead to the wrong start of the packet)?
 
 4. Implementation of the communication protocol.
