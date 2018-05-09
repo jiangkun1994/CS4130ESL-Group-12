@@ -10,7 +10,7 @@ DRONE TO PC ->
 
 1byte | 1byte  | 1byte| 1byte    | 3bytes    | 1byte     | 1byte |
 ------|--------|------|----------|-----------|-----------|-------|
-Header| length | mode | batterty | x | y | z | barometer | CRC   |     (Need to send back time_stamp, how many bytes for it?)
+Header| length | mode | battery  | x | y | z | barometer | CRC   |     (Need to send back time_stamp, how many bytes for it?)
 
 
 #define HEADER 0x80
