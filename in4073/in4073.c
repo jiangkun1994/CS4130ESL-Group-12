@@ -298,8 +298,24 @@ void calibration_mode() // PROBLEM: repeat the calibrarion mode, the mode does n
 	time_latest_packet_us = get_time_us();
 
 	printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
-	safe_print = true;
-	statefunc = safe_mode;
+	printf("CALIBRATION MODE FINISHED! \n");
+
+	handle_transmission_data();
+
+	switch(pc_packet.data[0])
+	{
+		case SAFE_MODE:
+			safe_print = true;
+			statefunc = safe_mode;
+			break;
+		case PANIC_MODE:
+			statefunc = panic_mode;
+			break;
+		default:
+			break;
+	}
+	// safe_print = true;
+	// statefunc = safe_mode;
 }
 
 void yaw_control_mode()
@@ -336,6 +352,11 @@ void yaw_control_mode()
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
+			lift_force = 0;
+			roll_moment = 0;
+			pitch_moment = 0;
+			yaw_moment = 0;
+			p = 40;
 			statefunc = panic_mode;
 			break;
 		case YAW_CONTROL_MODE:
@@ -438,6 +459,13 @@ void full_control_mode()
 	switch(pc_packet.data[0])
 	{
 		case PANIC_MODE:
+			lift_force = 0;
+			roll_moment = 0;
+			pitch_moment = 0;
+			yaw_moment = 0;
+			p = 40;
+			p1 = 10;
+			p2 = 10;
 			statefunc = panic_mode;
 			break;
 		case FULL_CONTROL_MODE:
