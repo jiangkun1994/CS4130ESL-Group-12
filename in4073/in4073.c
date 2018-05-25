@@ -300,22 +300,22 @@ void calibration_mode() // PROBLEM: repeat the calibrarion mode, the mode does n
 	printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 	printf("CALIBRATION MODE FINISHED! \n");
 
-	handle_transmission_data();
+	// handle_transmission_data();
 
-	switch(pc_packet.data[0])
-	{
-		case SAFE_MODE:
-			safe_print = true;
-			statefunc = safe_mode;
-			break;
-		case PANIC_MODE:
-			statefunc = panic_mode;
-			break;
-		default:
-			break;
-	}
-	// safe_print = true;
-	// statefunc = safe_mode;
+	// switch(pc_packet.data[0])
+	// {
+	// 	case SAFE_MODE:
+	// 		safe_print = true;
+	// 		statefunc = safe_mode;
+	// 		break;
+	// 	case PANIC_MODE:
+	// 		statefunc = panic_mode;
+	// 		break;
+	// 	default:
+	// 		break;
+	// }
+	safe_print = true;
+	statefunc = safe_mode;
 }
 
 void yaw_control_mode()
