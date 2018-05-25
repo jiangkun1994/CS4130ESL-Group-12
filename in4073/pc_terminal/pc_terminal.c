@@ -35,6 +35,7 @@ void print_input_kb_js(){
 
 /* sent the packet we created from pc to drone */
 void tx_packet(int8_t *packet){
+	rs232_putchar(packet[3]);
 	int i = 0;
     while(i < packet[1]+PACKET_OVERHEAD){
        	rs232_putchar(packet[i]);
@@ -87,11 +88,13 @@ int main(int argc, char **argv)
         	data_general[2] = inspect_overflow(kb_pitch_offset, 0);
         	data_general[3] = inspect_overflow(kb_roll_offset, 0);
         	data_general[4] = inspect_overflow(kb_yaw_offset, 0);
+        	//printf("p_adjust=%d, mode=%d \n", p_adjust,mode);
 
           //printf("PACKET PC|%d|%d|%d|%d|%d|\n", data_general[0], data_general[1], data_general[2], data_general[3], data_general[4]);
 
         	create_packet(LENGTH_GENERAL, PACKET_GENERAL, p_adjust, data_general, packet_from_pc);
        		tx_packet(packet_from_pc);
+       		p_adjust = 0;
 
 			old_time = current_time;
 
