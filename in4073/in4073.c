@@ -159,7 +159,7 @@ void handle_transmission_data()
 	}
 
 	if (flags & FLAG_1){
-		//printf("receive succesful via flag on drone\n");2
+		//printf("receive succesful via flag on drone\n");
 		if(!(flags & FLAG_2)){
 			switch(rx.packet_id) {
 				case PACKET_GENERAL:
