@@ -34,7 +34,7 @@ void print_input_kb_js(){
 }
 
 /* sent the packet we created from pc to drone */
-void tx_packet(int8_t *packet){
+void tx_packet(uint8_t *packet){
 	rs232_putchar(packet[3]);
 	int i = 0;
     while(i < packet[1]+PACKET_OVERHEAD){
@@ -49,9 +49,10 @@ void tx_packet(int8_t *packet){
 int main(int argc, char **argv)
 {
 	int8_t c;
-	int8_t data_general[LENGTH_GENERAL];
-	int8_t packet_from_pc[MAX_PAYLOAD+PACKET_OVERHEAD];
+	uint8_t packet_from_pc[MAX_PAYLOAD];
 	struct packet rx;
+	struct msg_pc_template msg_pcTX = {0};;
+	struct msg_telemetry_template *msg_teleRX;
 
 	//js_init();
 
@@ -83,25 +84,26 @@ int main(int argc, char **argv)
 
         current_time = mon_time_ms();
         if((current_time - old_time) > 10){
-        	data_general[0] = mode;
-        	data_general[1] = inspect_overflow_1ift(kb_lift_offset, 0);
-        	data_general[2] = inspect_overflow(kb_pitch_offset, 0);
-        	data_general[3] = inspect_overflow(kb_roll_offset, 0);
-        	data_general[4] = inspect_overflow(kb_yaw_offset, 0);
-        	//printf("p_adjust=%d, mode=%d \n", p_adjust,mode);
+					msg_pcTX.mode 	= mode;
+					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, 0);
+					msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, 0);
+					msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, 0);
+					msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, 0);
+					msg_pcTX.P 			= p_adjust;
+					msg_pcTX.P1			= 0; //Dont know if we need to send P1
+					msg_pcTX.P2			= 0; //and or P2? MADE JUST IN CASE!
+					p_adjust = 0;
 
-          //printf("PACKET PC|%d|%d|%d|%d|%d|\n", data_general[0], data_general[1], data_general[2], data_general[3], data_general[4]);
-
-        	create_packet(LENGTH_GENERAL, PACKET_GENERAL, p_adjust, data_general, packet_from_pc);
+					create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
        		tx_packet(packet_from_pc);
-       		p_adjust = 0;
 
-			old_time = current_time;
+					old_time = current_time;
 
         }
 
-        if ((c = rs232_getchar_nb()) != -1){
-					if (rx.status == INIT && c != -HEADER_VALUE) {
+				//if ((c = rs232_getchar_nb()) != -1){
+				c = rs232_getchar_nb();
+					if (rx.status == INIT && c != HEADER_VALUE && c!= -1) {
 						//printf("DATA:%d\n", c);
 						term_putchar(c);
 					}
@@ -117,16 +119,15 @@ int main(int argc, char **argv)
 								}
 								break;
 							case PACKET_TELEMETRY:
-								mode = rx.data[0];
-								printf("DRONE TELEMETRY: ");
-								int i = 0;
-								while (i < LENGTH_TELEMETRY){
-											printf("|%d", rx.data[i]);
-											i++;
-								}
-								//mode = rx.data[0];
+								msg_teleRX = (struct msg_telemetry_template *)&rx.data[0];
+								//mode = msg_teleRX->mode;
 
-								printf("\n");
+								printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
+								printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
+								printf("%6d %6d %6d| ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
+								printf("%6d %6d %6d| ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
+								printf("%6d %6d %6d| ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz);
+								printf("%4d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
 								break;
 						default:
 								printf("UNDEFINED PACKET RECIEVED\n");
@@ -134,8 +135,8 @@ int main(int argc, char **argv)
 						}
 						flags &= ~FLAG_1;
 					}
-        }
-	}
+        //}
+}
 
 	term_exitio();
 	rs232_close();

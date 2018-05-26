@@ -4,7 +4,7 @@ void protocol_init(){
     flags = 0;
 }
 
-unsigned char crc_high_first(int8_t *ptr, unsigned char len)
+uint8_t crc_high_first(uint8_t *ptr, unsigned char len)
 {
     uint8_t i;
     uint8_t crc=0x00;
@@ -20,93 +20,105 @@ unsigned char crc_high_first(int8_t *ptr, unsigned char len)
                 crc = (crc << 1);
         }
     }
-
+    crc = crc & 0x7F;
     return (crc);
 }
 
-void create_packet(uint8_t length, uint8_t packet_id, uint8_t p_adjust, int8_t *data, int8_t *packet){
+void create_packet(uint8_t length, uint8_t packet_id, uint8_t *data, uint8_t *packet){
 
     uint8_t i = 0;
 
     packet[0] = HEADER_VALUE;
     packet[1] = length;
     packet[2] = packet_id;
-    packet[3] = p_adjust;
 
     while(i < length){
-        packet[i+4] = data[i];
+        packet[i+3] = data[i];
         i++;
     }
-    packet[i+4] = crc_high_first(data, length);
+    packet[i+3] = crc_high_first(data, length);
 
 }
 
-void create_ack(uint8_t length, uint8_t p_adjust, int8_t data, uint8_t *ack_packet){
+void create_ack(uint8_t length, int8_t data, uint8_t *ack_packet){
     ack_packet[0] = HEADER_VALUE;
     ack_packet[1] = length;
     ack_packet[2] = PACKET_ACK; //packet id
-    ack_packet[3] = p_adjust;
-    ack_packet[4] = data;       //ACK or not
-    ack_packet[5] = crc_high_first(&data, length);
+    ack_packet[3] = data;       //ACK or not
+    ack_packet[4] = crc_high_first((uint8_t*)&data, length);
 }
 
-void create_telemetry_packet(uint8_t length, uint8_t p_adjust, int8_t *data, int8_t *telemetry_packet){
-    int i = 0;
-    telemetry_packet[0] = HEADER_VALUE;
-    telemetry_packet[1] = length;
-    telemetry_packet[2] = PACKET_TELEMETRY;
-    telemetry_packet[3] = p_adjust;
-    while(i < length){
-        telemetry_packet[i+4] = data[i];
-        i++;
-    }
-    telemetry_packet[i+4] = crc_high_first(data, length);
-}
+// void create_telemetry_packet(uint8_t length, int8_t *data, uint8_t *telemetry_packet){
+//     int i = 0;
+//     telemetry_packet[0] = HEADER_VALUE;
+//     telemetry_packet[1] = length;
+//     telemetry_packet[2] = PACKET_TELEMETRY;
+//     while(i < length){
+//         telemetry_packet[i+3] = (uint8_t)data[i];
+//         i++;
+//     }
+//     telemetry_packet[i+3] = crc_high_first((uint8_t*)data, length);
+// }
 
 uint8_t parse_packet(struct packet *rx, uint8_t c){
     uint8_t correct = 1;
     switch (rx->status) {
         case INIT:
             if (c == HEADER_VALUE){
-                rx->i = 0;
+                rx->index = 0;
                 rx->header = c;
-                //printf("HEADER = %d\n", rx->header);
+                #ifdef DEBUG_PROTOCOL
+                printf("HEADER = %d | ", rx->header);
+                #endif
                 rx->status++;
+                break;
             }
             break;
         case GOT_LEN:
             rx->length = c;
-            //printf("LENGTH = %d\n", rx->length);
+            #ifdef DEBUG_PROTOCOL
+            printf("%d | ", rx->length);
+            #endif
             rx->status++;
             break;
         case GOT_ID:
             rx->packet_id = c;
-            //printf("PACKET_ID = %d\n", rx->packet_id);
-            rx->status++;
-            break;
-        case GOT_P_ADJUST:
-            rx->p_adjust = c;
+            #ifdef DEBUG_PROTOCOL
+            printf("%d | ", rx->packet_id);
+            #endif
             rx->status++;
             break;
         case GOT_DATA:
-            rx->data[rx->i] = c;
-            //printf("DATA[%d] = %d\n", rx->i,rx->data[rx->i]);
-            if(rx->i >= (rx->length-1)){
+            rx->data[rx->index] = c;
+            #ifdef DEBUG_PROTOCOL
+            printf("%d | ", rx->data[rx->index]);
+            #endif
+            if(rx->index >= (rx->length-1)){
                 rx->status++;
             }
-            rx->i++;
+            rx->index++;
             break;
         case GOT_CRC:
             rx->crc = c;
-            //printf("CRC RECEIVED=%d\n", rx->crc);
+            #ifdef DEBUG_PROTOCOL
+            printf("%d\n", rx->crc);
+            #endif
             rx->status++;
             //break;
         case GOT_PACKET:
-            if (crc_high_first(rx->data, rx->length) != rx->crc){
+            if (crc_high_first((uint8_t*)rx->data, rx->length) != rx->crc){
                 rx->crc_fails++;
                 correct = 0;
                 flags |= FLAG_2;
                 printf("CRC FAIL\n");
+
+                printf("HEADER:%d | ", rx->header);
+                printf("LENGTH:%d | ", rx->length);
+                printf("PACKET ID:%d | ", rx->packet_id);
+                printf("MODE:%d | ", rx->data[0]);
+                printf("CRC:%d | ", rx->crc);
+                printf("CRC_OWN:%d | ", (crc_high_first((uint8_t*)rx->data, rx->length)));
+                printf("\n");
             }
             flags |= FLAG_1;
             rx->status = INIT;
@@ -114,6 +126,7 @@ uint8_t parse_packet(struct packet *rx, uint8_t c){
 
         default:
             rx->status = INIT;
+            printf("DEFAULT\n");
             break;
     }
     return correct;

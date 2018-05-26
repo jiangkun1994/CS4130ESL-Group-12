@@ -18,18 +18,23 @@
 #include "drone.h"
 
 #define BAT_THRESHOLD   500
-#define BAT_WARNING		501
+#define BAT_WARNING			501
 
 #define MIN_RPM 184320 // 180 RPM
 #define MAX_RPM 460800 // 450 RPM
 
+uint8_t telemetry_packet[MAX_PAYLOAD];
+struct msg_telemetry_template msg_teleTX = {0};
+static struct packet rx;
+struct msg_pc_template *msg_pcRX;
+
 //in this function calculate the values for the ae[] array makis
-// Z = lift
-// L = row
-// M = pitch
-// N = yaw
 void calculate_rpm(int Z, int L, int M, int N)
 {
+	// Z = lift
+	// L = row
+	// M = pitch
+	// N = yaw
 	int ae1[4],i;
 	//if there is lift force calculate ae[] array values
 	if(Z>0)
@@ -91,9 +96,11 @@ void calculate_rpm(int Z, int L, int M, int N)
  * send_ack -- send acknowledgement
  *------------------------------------------------------------------
  */
-void send_ack(uint8_t data){
+void send_ack(uint8_t data)
+{
 	uint8_t ack_packet[PACKET_ACK_LENGTH];
-	create_ack(LENGTH_ACK, pc_packet.p_adjust, data, ack_packet);
+	//create_ack(LENGTH_ACK, pc_packet.p_adjust, data, ack_packet);
+	create_ack(LENGTH_ACK, data, ack_packet);
 
 	int i = 0;
 	while (i < PACKET_ACK_LENGTH){
@@ -106,40 +113,68 @@ void send_ack(uint8_t data){
  * send_telemetry -- send the data read from sensors from drone to pc
  *----------------------------------------------------------------------
  */
-void send_telemetry(int8_t *data){
-	int8_t telemetry_packet[PACKET_TELEMETRY_LENGTH];
-	create_telemetry_packet(LENGTH_TELEMETRY, pc_packet.p_adjust, data, telemetry_packet);
+void send_telemetry()
+{
+		msg_teleTX.mode = cur_mode;
+		msg_teleTX.lift = cur_lift;
+		msg_teleTX.roll = cur_roll;
+		msg_teleTX.pitch = cur_pitch;
+		msg_teleTX.yaw = cur_yaw;
 
-	int i = 0;
-	while(i < PACKET_TELEMETRY_LENGTH){
-		uart_put(telemetry_packet[i]);
-		i++;
-	}
+		msg_teleTX.engine[0] = ae[0];
+		msg_teleTX.engine[1] = ae[1];
+		msg_teleTX.engine[2] = ae[2];
+		msg_teleTX.engine[3] = ae[3];
+
+		msg_teleTX.phi = phi;
+		msg_teleTX.theta = theta;
+		msg_teleTX.psi = psi;
+
+		msg_teleTX.sp = sp;
+		msg_teleTX.sq = sq;
+		msg_teleTX.sr = sr;
+
+		msg_teleTX.sax = sax;
+		msg_teleTX.say = say;
+		msg_teleTX.saz = saz;
+
+		msg_teleTX.bat_volt = bat_volt;
+
+		msg_teleTX.P = p;
+
+		create_packet(sizeof(struct msg_telemetry_template), PACKET_TELEMETRY, (uint8_t *) &msg_teleTX, telemetry_packet);
+
+		int i = 0;
+		while(i < telemetry_packet[1]+PACKET_OVERHEAD){
+			uart_put(telemetry_packet[i]);
+			i++;
+		}
 }
 
 /* process the packet from pc */
-void handle_transmission_data(){
-	static struct packet rx;
-    int i = 0;
+void handle_transmission_data()
+{
 	if (rx_queue.count){
 		parse_packet (&rx, dequeue(&rx_queue));
 	}
 
 	if (flags & FLAG_1){
-		//printf("receive succesful via flag on drone\n");
+		//printf("receive succesful via flag on drone\n");2
 		if(!(flags & FLAG_2)){
 			switch(rx.packet_id) {
 				case PACKET_GENERAL:
-					pc_packet.p_adjust = rx.p_adjust;
-					while(i < rx.length){
-						pc_packet.data[i] = rx.data[i];
-						i++;
-					}
+				msg_pcRX = (struct msg_pc_template *)&rx.data[0];
+
+				pc_packet.data[0] = msg_pcRX->mode;
+				pc_packet.data[1] = msg_pcRX->lift;
+				pc_packet.data[2] = msg_pcRX->pitch;
+				pc_packet.data[3] = msg_pcRX->roll;
+				pc_packet.data[4] = msg_pcRX->yaw;
+				pc_packet.p_adjust = msg_pcRX->P;
 				default:
 					break;
 			}
 		}
-
 		//send_ack(flags);
 		flags &= ~FLAG_2;
 
@@ -159,7 +194,6 @@ void check_connection()
 		statefunc = panic_mode;
 	}
 }
-
 
 void manual_mode()
 {
@@ -224,7 +258,7 @@ void manual_mode()
 		old_pitch = cur_pitch;
 		old_yaw = cur_yaw;
 		//print your changed state
-		printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
+		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
 	}
 
 	//while there is no message received wait here and check your connection
@@ -266,7 +300,7 @@ void calibration_mode() // PROBLEM: repeat the calibrarion mode, the mode does n
 	//indicate that you are in calibration mode
 	nrf_gpio_pin_write(RED,1);
 	nrf_gpio_pin_write(YELLOW,1);
-	nrf_gpio_pin_write(GREEN,0);	
+	nrf_gpio_pin_write(GREEN,0);
 
 	// the number of samples read from sensors
 	int sample = 0;
@@ -334,15 +368,15 @@ void yaw_control_mode()
 		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment - sr)); // Not sure that whether the sr should multiply a constant or not
 	}
 
-	if (check_timer_flag()) 
-	{			
+	if (check_timer_flag())
+	{
 		if (counter++%15 == 0)
 		{
 			nrf_gpio_pin_toggle(BLUE);
 
 			//battery_check();
 
-			printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, bat_volt=%d p_adjust=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],p,bat_volt, pc_packet.p_adjust);
+			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, bat_volt=%d p_adjust=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],p,bat_volt, pc_packet.p_adjust);
 		}
 		clear_timer_flag();
 	}
@@ -421,7 +455,7 @@ void yaw_control_mode()
 		old_pitch = cur_pitch;
 		old_yaw = cur_yaw;
 		//print your changed state
-		printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],p,bat_volt);
+		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],p,bat_volt);
 	}
 
 }
@@ -442,15 +476,15 @@ void full_control_mode()
 		calculate_rpm(lift_force, p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), p * (yaw_moment - (sr - sr_off)));
 	}
 
-	if (check_timer_flag()) 
-	{			
+	if (check_timer_flag())
+	{
 		if (counter++%15 == 0)
 		{
 			nrf_gpio_pin_toggle(BLUE);
 
 			//battery_check();
 
-			printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
+			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
 		}
 		clear_timer_flag();
 	}
@@ -566,12 +600,11 @@ void full_control_mode()
 		old_pitch = cur_pitch;
 		old_yaw = cur_yaw;
 		//print your changed state
-		printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
+		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
 	}
 
 
 }
-
 
 //panic mode state makis
 void panic_mode()
@@ -594,7 +627,7 @@ void panic_mode()
 		ae[3] -= 10;
 		run_filters_and_control();
 		nrf_delay_ms(200);
-		printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
+		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
 	}
 	else
 	{
@@ -660,7 +693,7 @@ void safe_mode()
 	//check_battery();
 	if(safe_print == true)
 	{
-		printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
+		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
 		safe_print = false;
 	}
 
@@ -677,7 +710,7 @@ void safe_mode()
 				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
 				{
 					//print your changed state
-					printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",MANUAL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
+					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",MANUAL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
 					statefunc = manual_mode;
 				}
 				break;
@@ -689,14 +722,14 @@ void safe_mode()
 			case YAW_CONTROL_MODE:
 				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
 				{
-					printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",YAW_CONTROL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
+					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",YAW_CONTROL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
 					statefunc = yaw_control_mode;
 				}
 				break;
 			case FULL_CONTROL_MODE:
 				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
 				{
-					printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
+					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
 					statefunc = full_control_mode;
 				}
 				break;
@@ -765,7 +798,8 @@ void initialize()
 	//set_mode(SAFE_MODE);
 }
 
-void check_battery(){
+void check_battery()
+{
 	//check battery voltage
 	if (check_timer_flag())
 	{
@@ -793,7 +827,6 @@ void check_battery(){
 	}
 }
 
-
 /*------------------------------------------------------------------
  * main -- everything you need is here :)
  *------------------------------------------------------------------
@@ -811,26 +844,9 @@ int main(void){
 
 		if (check_telemetry_timer_flag())
 		{
-			//clear_timer_flag();
-			int8_t DATA[LENGTH_TELEMETRY];
-			DATA[0] = cur_mode;
-
-			int i = 1;
-			while (i < LENGTH_TELEMETRY){
-				DATA[i] = 0;
-				i++;
-			}
-			DATA[1] = cur_lift;
-			DATA[2] = cur_pitch;
-			DATA[3] = cur_roll;
-			DATA[4] = cur_yaw;
-
-			send_telemetry(DATA);
+			send_telemetry();
 			clear_telemetry_timer_flag();
-
 		}
-
-
 	}
 
 	printf("\n\t Goodbye \n\n");

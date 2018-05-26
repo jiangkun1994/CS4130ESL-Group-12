@@ -22,10 +22,10 @@
 #include "protocol/protocol.h"
 #include <math.h>
 
-#define RED		22
+#define RED				22
 #define YELLOW		24
-#define GREEN		28
-#define BLUE		30
+#define GREEN			28
+#define BLUE			30
 #define INT_PIN		5
 
 bool demo_done;
@@ -35,8 +35,8 @@ int16_t motor[4],ae[4];
 void run_filters_and_control();
 
 // Timers
-#define TIMER_PERIOD	50 //50ms=20Hz (MAX 23bit, 4.6h)
-#define TELEMETRY_TIMER_PERIOD 800
+#define TIMER_PERIOD						50 //50ms=20Hz (MAX 23bit, 4.6h)
+#define TELEMETRY_TIMER_PERIOD 	500
 void timers_init(void);
 uint32_t get_time_us(void);
 bool check_timer_flag(void);
