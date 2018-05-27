@@ -29,6 +29,7 @@ extern uint8_t p_adjust;
 int	axis[6];
 int	button[12];
 extern int fd;
+extern uint8_t temp;
 
 
 //struct packet mypacket;

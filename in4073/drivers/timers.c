@@ -12,10 +12,13 @@
 
 #include "in4073.h"
 #include "app_timer.h"
+#include "../drone.h"
 
 uint32_t global_time;
 bool timer_flag;
 bool telemetry_timer_flag;
+bool panic_timer_flag;
+uint32_t time_latest_packet_us, cur_time_us;
 
 void TIMER2_IRQHandler(void)
 {
@@ -81,6 +84,16 @@ void clear_telemetry_timer_flag(void)
 	telemetry_timer_flag = false;
 }
 
+bool check_panic_mode_timer_flag(void)
+{
+	return panic_timer_flag;
+}
+
+void clear_panic_mode_timer_flag(void)
+{
+	panic_timer_flag = false;
+}
+
 void quadrupel_timer_handler(void *p_context)
 {
 	timer_flag = true;
@@ -91,6 +104,22 @@ void telemetry_timer_handler(void *p_context)
   telemetry_timer_flag = true;
 }
 
+void panic_mode_timer_handler(void *p_context)
+{
+  panic_timer_flag = true;
+}
+
+void connection_mode_timer_handler(void *p_context)
+{
+	uint32_t time_gap;
+	cur_time_us = get_time_us();
+	time_gap = cur_time_us - time_latest_packet_us;
+	if((time_gap > 600000) && cur_mode != SAFE_MODE)
+	{
+		connection = false;
+		statefunc = panic_mode;
+	}
+}
 
 void timers_init(void)
 {
@@ -154,7 +183,7 @@ void timers_init(void)
 
 	// app timer
 	#define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
-	#define APP_TIMER_OP_QUEUE_SIZE         4                                           /**< Size of timer operation queues. */
+	#define APP_TIMER_OP_QUEUE_SIZE         6                                           /**< Size of timer operation queues. */
 	#define QUADRUPEL_TIMER_PERIOD  APP_TIMER_TICKS(TIMER_PERIOD, APP_TIMER_PRESCALER)  // timer period is in ms
 
 	APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
@@ -164,10 +193,18 @@ void timers_init(void)
 	app_timer_start(quadrupel_timer, QUADRUPEL_TIMER_PERIOD, NULL);
 
   #define TEL_TIMER_PERIOD  APP_TIMER_TICKS(TELEMETRY_TIMER_PERIOD, APP_TIMER_PRESCALER)  // timer period is in ms
-
   APP_TIMER_DEF(telemetry_timer);
   app_timer_create(&telemetry_timer, APP_TIMER_MODE_REPEATED, telemetry_timer_handler);
   app_timer_start(telemetry_timer, TEL_TIMER_PERIOD, NULL);
 
+	#define	PM_TIMER_PERIOD APP_TIMER_TICKS(PANIC_MODE_PERIOD, APP_TIMER_PRESCALER)
+	APP_TIMER_DEF(panic_mode_timer);
+	app_timer_create(&panic_mode_timer, APP_TIMER_MODE_REPEATED, panic_mode_timer_handler);
+	app_timer_start(panic_mode_timer, PM_TIMER_PERIOD, NULL);
+
+	#define CONNECTION_TIMER_PERIOD APP_TIMER_TICKS(CONNECTION_MODE_PERIOD, APP_TIMER_PRESCALER)
+	APP_TIMER_DEF(connection_mode_timer);
+	app_timer_create(&connection_mode_timer, APP_TIMER_MODE_REPEATED, connection_mode_timer_handler);
+	app_timer_start(connection_mode_timer, CONNECTION_TIMER_PERIOD, NULL);
 
 }

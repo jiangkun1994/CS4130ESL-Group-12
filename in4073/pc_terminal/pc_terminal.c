@@ -26,6 +26,7 @@
 char mode = 0;
 int fd = 0;
 uint8_t p_adjust = 0;
+uint8_t temp = 0;
 
 /* print the input data from kb and js */
 void print_input_kb_js(){
@@ -53,6 +54,7 @@ int main(int argc, char **argv)
 	struct packet rx;
 	struct msg_pc_template msg_pcTX = {0};;
 	struct msg_telemetry_template *msg_teleRX;
+	rx.status = INIT;
 
 	//js_init();
 
@@ -83,7 +85,7 @@ int main(int argc, char **argv)
         }
 
         current_time = mon_time_ms();
-        if((current_time - old_time) > 10){
+        if(((current_time - old_time) > 10) && (temp == 0)){
 					msg_pcTX.mode 	= mode;
 					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, 0);
 					msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, 0);
@@ -120,7 +122,7 @@ int main(int argc, char **argv)
 								break;
 							case PACKET_TELEMETRY:
 								msg_teleRX = (struct msg_telemetry_template *)&rx.data[0];
-								//mode = msg_teleRX->mode;
+								mode = msg_teleRX->mode;
 
 								printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
 								printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);

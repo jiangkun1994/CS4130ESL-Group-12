@@ -25,8 +25,11 @@
 
 uint8_t telemetry_packet[MAX_PAYLOAD];
 struct msg_telemetry_template msg_teleTX = {0};
-static struct packet rx;
+static struct packet rx = {0};
 struct msg_pc_template *msg_pcRX;
+uint8_t panic_loops = 0;
+
+uint32_t time_latest_packet_us, cur_time_us;
 
 //in this function calculate the values for the ae[] array makis
 void calculate_rpm(int Z, int L, int M, int N)
@@ -174,6 +177,7 @@ void handle_transmission_data()
 				default:
 					break;
 			}
+			time_latest_packet_us = get_time_us();
 		}
 		//send_ack(flags);
 		flags &= ~FLAG_2;
@@ -183,17 +187,17 @@ void handle_transmission_data()
 }
 
 /* if there is no packet over 600ms, drone will get into the panic mode */
-void check_connection()
-{
-	uint32_t time_gap;
-	cur_time_us = get_time_us();
-	time_gap = cur_time_us - time_latest_packet_us;
-	if(time_gap > 600000)
-	{
-		connection = false;
-		statefunc = panic_mode;
-	}
-}
+// void check_connection()
+// {
+// 	uint32_t time_gap;
+// 	cur_time_us = get_time_us();
+// 	time_gap = cur_time_us - time_latest_packet_us;
+// 	if(time_gap > 600000)
+// 	{
+// 		connection = false;
+// 		statefunc = panic_mode;
+// 	}
+// }
 
 void manual_mode()
 {
@@ -291,6 +295,7 @@ void manual_mode()
 void calibration_mode() // PROBLEM: repeat the calibrarion mode, the mode does not syncronize???  Maybe the function sent_telemetry should in each mode or it is the problem of check telemetry time lag.
 {
 	cur_mode = CALIBRATION_MODE;
+
 	sp_off = 0;
 	sq_off = 0;
 	sr_off = 0;
@@ -618,42 +623,50 @@ void panic_mode()
 	nrf_gpio_pin_write(RED,0);
 	nrf_gpio_pin_write(YELLOW,0);
 
-	//fly at minimum rpm
-	if(ae[0] > 175 || ae[1] > 175 || ae[2] > 175 || ae[3] > 175)
+	if (check_panic_mode_timer_flag())
 	{
-		ae[0] -= 10;
-		ae[1] -= 10;
-		ae[2] -= 10;
-		ae[3] -= 10;
-		run_filters_and_control();
-		nrf_delay_ms(200);
-		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
-	}
-	else
-	{
-		//zero down some values
-		cur_lift = 0;
-		cur_pitch = 0;
-		cur_roll = 0;
-		cur_yaw = 0;
-		old_lift = 0;
-		old_pitch = 0;
-		old_roll = 0;
-		old_yaw = 0;
-
-		//print your changed state
-		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
-
-		//after 2 seconds get to safe mode
-		//nrf_delay_ms(2000);
-
-		//fixes a bug, doesn't care to check connection going to safe mode anyway
+		panic_loops++;
+		//Update latest time since where not parsing any incomming data
 		time_latest_packet_us = get_time_us();
+		//fly at minimum rpm
+		if(ae[0] > 175 || ae[1] > 175 || ae[2] > 175 || ae[3] > 175)
+		{
+			ae[0] -= 10;
+			ae[1] -= 10;
+			ae[2] -= 10;
+			ae[3] -= 10;
+			run_filters_and_control();
+			//nrf_delay_ms(200);
+			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
+		}
+		else if (panic_loops > MIN_PANIC_LOOPS)
+		{
+			//zero down some values
+			cur_lift = 0;
+			cur_pitch = 0;
+			cur_roll = 0;
+			cur_yaw = 0;
+			old_lift = 0;
+			old_pitch = 0;
+			old_roll = 0;
+			old_yaw = 0;
 
-		//flag to print once in safe mode
-		safe_print = true;
-	//enters safe mode
-		statefunc = safe_mode;
+			//print your changed state
+			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
+
+			//after 2 seconds get to safe mode
+			//nrf_delay_ms(2000);
+
+			//fixes a bug, doesn't care to check connection going to safe mode anyway
+			//time_latest_packet_us = get_time_us();
+
+			//flag to print once in safe mode
+			safe_print = true;
+			//enters safe mode
+			statefunc = safe_mode;
+			panic_loops = 0;
+		}
+		clear_panic_mode_timer_flag();
 	}
 }
 
@@ -766,6 +779,7 @@ void initialize()
 	pc_packet.data[2] = 0; // pitch
 	pc_packet.data[3] = 0; // roll
 	pc_packet.data[4] = 0; // yaw
+	rx.status = INIT;
 
 	//initialise rest of the variables to safe values, just in case
 	cur_mode = SAFE_MODE;
@@ -823,7 +837,6 @@ void check_battery()
 			printf("Battery true %d\n", bat_volt);
 		}
 		clear_timer_flag();
-
 	}
 }
 
@@ -837,6 +850,7 @@ int main(void){
 
 	while (!demo_done){
 
+		//check_connection();
 		check_battery();
 
 		//get to the state

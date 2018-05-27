@@ -113,11 +113,15 @@ void kb_input(uint8_t input_key){
     	case 'c':
       		{
       		    kb_yaw_offset = 0;
-                kb_lift_offset = 0;
-                kb_roll_offset = 0;
-                kb_pitch_offset = 0;
+              kb_lift_offset = 0;
+              kb_roll_offset = 0;
+              kb_pitch_offset = 0;
       		}
 			break;
+    case 'f':
+          printf("CONNECTION FAILURE TESTING\n");
+          temp = 1;
+          break;
 		case 'A': // VK_LEFT: // roll (roll, keyboard: left/right arrows, joystick: handle left/right (x))
         	if(kb_roll_offset!=63)
         	{

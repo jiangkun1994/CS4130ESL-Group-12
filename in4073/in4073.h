@@ -35,14 +35,19 @@ int16_t motor[4],ae[4];
 void run_filters_and_control();
 
 // Timers
-#define TIMER_PERIOD						50 //50ms=20Hz (MAX 23bit, 4.6h)
-#define TELEMETRY_TIMER_PERIOD 	500
+#define TIMER_PERIOD						50 	//50ms=20Hz (MAX 23bit, 4.6h)
+#define PANIC_MODE_PERIOD				200	//200ms
+#define TELEMETRY_TIMER_PERIOD 	500	//500ms
+#define CONNECTION_MODE_PERIOD	600
+#define MIN_PANIC_LOOPS					4
 void timers_init(void);
 uint32_t get_time_us(void);
 bool check_timer_flag(void);
 void clear_timer_flag(void);
 bool check_telemetry_timer_flag(void);
 void clear_telemetry_timer_flag(void);
+bool check_panic_mode_timer_flag(void);
+void clear_panic_mode_timer_flag(void);
 
 // GPIO
 void gpio_init(void);

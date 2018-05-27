@@ -52,7 +52,7 @@ int16_t phi_off;
 int16_t theta_off;
 
 //counters to take care of exiting when communication breaks down
-uint32_t time_latest_packet_us, cur_time_us;
+extern uint32_t time_latest_packet_us, cur_time_us;
 
 //flags indicating that there is still connection and battery
 bool connection;
