@@ -26,7 +26,7 @@
 char mode = 0;
 int fd = 0;
 uint8_t p_adjust = 0;
-uint8_t temp = 0;
+uint8_t connection_failure_flag = 0;
 
 /* print the input data from kb and js */
 void print_input_kb_js(){
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
         }
 
         current_time = mon_time_ms();
-        if(((current_time - old_time) > 10) && (temp == 0)){
+        if(((current_time - old_time) > 10) && (connection_failure_flag == 0)){
 					msg_pcTX.mode 	= mode;
 					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, 0);
 					msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, 0);

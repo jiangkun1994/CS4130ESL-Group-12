@@ -120,7 +120,7 @@ void kb_input(uint8_t input_key){
 			break;
     case 'f':
           printf("CONNECTION FAILURE TESTING\n");
-          temp = 1;
+          connection_failure_flag = 1;
           break;
 		case 'A': // VK_LEFT: // roll (roll, keyboard: left/right arrows, joystick: handle left/right (x))
         	if(kb_roll_offset!=63)

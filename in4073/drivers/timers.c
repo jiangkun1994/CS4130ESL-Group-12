@@ -12,13 +12,12 @@
 
 #include "in4073.h"
 #include "app_timer.h"
-#include "../drone.h"
 
 uint32_t global_time;
 bool timer_flag;
 bool telemetry_timer_flag;
 bool panic_timer_flag;
-uint32_t time_latest_packet_us, cur_time_us;
+bool connection_timer_flag;
 
 void TIMER2_IRQHandler(void)
 {
@@ -79,6 +78,16 @@ bool check_telemetry_timer_flag(void)
 	return telemetry_timer_flag;
 }
 
+void clear_connection_timer_flag(void)
+{
+	connection_timer_flag = false;
+}
+
+bool check_connection_timer_flag(void)
+{
+	return connection_timer_flag;
+}
+
 void clear_telemetry_timer_flag(void)
 {
 	telemetry_timer_flag = false;
@@ -111,14 +120,7 @@ void panic_mode_timer_handler(void *p_context)
 
 void connection_mode_timer_handler(void *p_context)
 {
-	uint32_t time_gap;
-	cur_time_us = get_time_us();
-	time_gap = cur_time_us - time_latest_packet_us;
-	if((time_gap > 600000) && cur_mode != SAFE_MODE)
-	{
-		connection = false;
-		statefunc = panic_mode;
-	}
+	connection_timer_flag = true;
 }
 
 void timers_init(void)

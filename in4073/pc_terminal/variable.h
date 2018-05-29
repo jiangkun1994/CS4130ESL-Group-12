@@ -29,7 +29,7 @@ extern uint8_t p_adjust;
 int	axis[6];
 int	button[12];
 extern int fd;
-extern uint8_t temp;
+extern uint8_t connection_failure_flag;
 
 
 //struct packet mypacket;

@@ -38,7 +38,7 @@ void run_filters_and_control();
 #define TIMER_PERIOD						50 	//50ms=20Hz (MAX 23bit, 4.6h)
 #define PANIC_MODE_PERIOD				200	//200ms
 #define TELEMETRY_TIMER_PERIOD 	500	//500ms
-#define CONNECTION_MODE_PERIOD	600
+#define CONNECTION_MODE_PERIOD	600 //600ms
 #define MIN_PANIC_LOOPS					4
 void timers_init(void);
 uint32_t get_time_us(void);
@@ -48,6 +48,8 @@ bool check_telemetry_timer_flag(void);
 void clear_telemetry_timer_flag(void);
 bool check_panic_mode_timer_flag(void);
 void clear_panic_mode_timer_flag(void);
+bool check_connection_timer_flag(void);
+void clear_connection_timer_flag(void);
 
 // GPIO
 void gpio_init(void);

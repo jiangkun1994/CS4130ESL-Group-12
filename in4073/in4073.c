@@ -118,6 +118,8 @@ void send_ack(uint8_t data)
  */
 void send_telemetry()
 {
+	if (check_telemetry_timer_flag())
+	{
 		msg_teleTX.mode = cur_mode;
 		msg_teleTX.lift = cur_lift;
 		msg_teleTX.roll = cur_roll;
@@ -152,6 +154,8 @@ void send_telemetry()
 			uart_put(telemetry_packet[i]);
 			i++;
 		}
+		clear_telemetry_timer_flag();
+	}
 }
 
 /* process the packet from pc */
@@ -187,17 +191,21 @@ void handle_transmission_data()
 }
 
 /* if there is no packet over 600ms, drone will get into the panic mode */
-// void check_connection()
-// {
-// 	uint32_t time_gap;
-// 	cur_time_us = get_time_us();
-// 	time_gap = cur_time_us - time_latest_packet_us;
-// 	if(time_gap > 600000)
-// 	{
-// 		connection = false;
-// 		statefunc = panic_mode;
-// 	}
-// }
+void check_connection()
+{
+	if (check_connection_timer_flag())
+	{
+		uint32_t time_diff;
+		cur_time_us = get_time_us();
+		time_diff = cur_time_us - time_latest_packet_us;
+		if((time_diff > 600000) && cur_mode != SAFE_MODE)
+		{
+			connection = false;
+			statefunc = panic_mode;
+		}
+		clear_connection_timer_flag();
+	}
+}
 
 void manual_mode()
 {
@@ -850,17 +858,13 @@ int main(void){
 
 	while (!demo_done){
 
-		//check_connection();
 		check_battery();
 
 		//get to the state
 		(*statefunc)();
 
-		if (check_telemetry_timer_flag())
-		{
-			send_telemetry();
-			clear_telemetry_timer_flag();
-		}
+		send_telemetry();
+		check_connection();
 	}
 
 	printf("\n\t Goodbye \n\n");
