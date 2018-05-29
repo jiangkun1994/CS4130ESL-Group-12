@@ -15,7 +15,8 @@ void full_control_mode();
 //void process_input();
 
 //state pointer
-void (*statefunc)();
+//void (*statefunc)();
+uint8_t statefunc;
 //void (*setmode)();
 
 //variable to hold current mode
@@ -60,8 +61,5 @@ bool battery;
 
 //flag indicating that a new message has arrived
 //bool msg;
-
-//flag to print in safe mode
-bool safe_print;
 
 uint32_t counter;

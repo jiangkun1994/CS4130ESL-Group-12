@@ -24,6 +24,7 @@ static struct packet rx = {0};
 struct msg_pc_template *msg_pcRX;
 uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
+uint8_t sample = 0;
 
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
@@ -131,7 +132,7 @@ void check_connection()
 		if((time_diff > 600000) && cur_mode != SAFE_MODE)
 		{
 			connection = false;
-			statefunc = panic_mode;
+			statefunc = PANIC_MODE;
 		}
 		clear_connection_timer_flag();
 	}
@@ -154,7 +155,7 @@ void manual_mode()
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
-			statefunc = panic_mode;
+			statefunc = PANIC_MODE;
 			break;
 		case MANUAL_MODE:
 			cur_lift = pc_packet.data[1];
@@ -176,21 +177,21 @@ void manual_mode()
 		// 	roll_moment = ((cur_roll - 128) * 2000);
 		// }
 		//else{
-		roll_moment = cur_roll << 11;
+		roll_moment = cur_roll << 12;
 		//}
 		// if(cur_pitch > 63)
 		// {
 		// 	pitch_moment = ((cur_pitch - 128) * 2000);
 		// }
 		//else{
-		pitch_moment = cur_pitch << 11;
+		pitch_moment = cur_pitch << 12;
 		//}
 		// if(cur_yaw > 63)
 		// {
 		// 	yaw_moment = ((cur_yaw - 128) * 4000);
 		// }
 		//else{
-		yaw_moment = cur_yaw << 12;
+		yaw_moment = cur_yaw << 13;
 		//}
 
 		calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
@@ -215,7 +216,7 @@ void manual_mode()
 	// switch (pc_packet.data[0])
 	// {
 	// 	case PANIC_MODE:
-	// 		statefunc=panic_mode;
+	// 		statefunc = PANIC_MODE;
 	// 		break;
 	// 	case MANUAL_MODE:
 	// 		cur_lift=pc_packet.data[1];
@@ -229,8 +230,7 @@ void manual_mode()
 	// }
 }
 
-/* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
-void calibration_mode() // PROBLEM: repeat the calibrarion mode, the mode does not syncronize???  Maybe the function sent_telemetry should in each mode or it is the problem of check telemetry time lag.
+void calibration_mode()
 {
 	cur_mode = CALIBRATION_MODE;
 
@@ -245,55 +245,84 @@ void calibration_mode() // PROBLEM: repeat the calibrarion mode, the mode does n
 	nrf_gpio_pin_write(YELLOW,1);
 	nrf_gpio_pin_write(GREEN,0);
 
-	// the number of samples read from sensors
-	int sample = 0;
-
-	// get the sum of offset for 150 samples
-	while(sample < 150)
-	{
-		if(check_sensor_int_flag()) // ???
-		{
-			get_dmp_data();
-			//clear_sensor_int_flag();
-			sp_off = sp_off + sp;
-			sq_off = sq_off + sq;
-			sr_off = sr_off + sr;
-			phi_off = phi_off + phi;
-			theta_off = theta_off + theta;
-			sample++;
-		}
-	}
-
-	// calculate the average off set for 150 samples
-	sp_off = sp_off / 150;
-	sq_off = sq_off / 150;
-	sr_off = sr_off / 150;
-	phi_off = phi_off / 150;
-	theta_off = theta_off / 150;
-
-	// when in calibration mode, no parse packet, so add this to indicate you are still in conncection
 	time_latest_packet_us = get_time_us();
 
-	printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
-	printf("CALIBRATION MODE FINISHED! \n");
+	if(check_sensor_int_flag())
+	{
+		get_dmp_data();
+		printf("SAMPLE number:%d\n", sample);
+		sample++;
+	}
 
-	// handle_transmission_data();
-
-	// switch(pc_packet.data[0])
-	// {
-	// 	case SAFE_MODE:
-	// 		safe_print = true;
-	// 		statefunc = safe_mode;
-	// 		break;
-	// 	case PANIC_MODE:
-	// 		statefunc = panic_mode;
-	// 		break;
-	// 	default:
-	// 		break;
-	// }
-	safe_print = true;
-	statefunc = safe_mode;
+	if (sample > 5){
+		statefunc = SAFE_MODE;
+		sample = 0;
+	}
 }
+
+// /* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
+// void calibration_mode() // PROBLEM: repeat the calibrarion mode, the mode does not syncronize???  Maybe the function sent_telemetry should in each mode or it is the problem of check telemetry time lag.
+// {
+// 	cur_mode = CALIBRATION_MODE;
+//
+// 	sp_off = 0;
+// 	sq_off = 0;
+// 	sr_off = 0;
+// 	phi_off = 0;
+// 	theta_off = 0;
+//
+// 	//indicate that you are in calibration mode
+// 	nrf_gpio_pin_write(RED,1);
+// 	nrf_gpio_pin_write(YELLOW,1);
+// 	nrf_gpio_pin_write(GREEN,0);
+//
+// 	// the number of samples read from sensors
+// 	int sample = 0;
+//
+// 	// get the sum of offset for 150 samples
+// 	while(sample < 150)
+// 	{
+// 		if(check_sensor_int_flag()) // ???
+// 		{
+// 			get_dmp_data();
+// 			//clear_sensor_int_flag();
+// 			sp_off = sp_off + sp;
+// 			sq_off = sq_off + sq;
+// 			sr_off = sr_off + sr;
+// 			phi_off = phi_off + phi;
+// 			theta_off = theta_off + theta;
+// 			sample++;
+// 		}
+// 	}
+//
+// 	// calculate the average off set for 150 samples
+// 	sp_off = sp_off / 150;
+// 	sq_off = sq_off / 150;
+// 	sr_off = sr_off / 150;
+// 	phi_off = phi_off / 150;
+// 	theta_off = theta_off / 150;
+//
+// 	// when in calibration mode, no parse packet, so add this to indicate you are still in conncection
+// 	time_latest_packet_us = get_time_us();
+//
+// 	printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
+// 	printf("CALIBRATION MODE FINISHED! \n");
+//
+// 	// handle_transmission_data();
+// 	//
+// 	// switch(pc_packet.data[0])
+// 	// {
+// 	// 	case SAFE_MODE:
+// 	// 		statefunc = SAFE_MODE;
+// 	// 		break;
+// 	// 	case PANIC_MODE:
+// 	// 		statefunc = PANIC_MODE;
+// 	// 		break;
+// 	// 	default:
+// 	// 		break;
+// 	// }
+// 	statefunc = SAFE_MODE;
+// }
 
 void yaw_control_mode()
 {
@@ -321,7 +350,7 @@ void yaw_control_mode()
 			pitch_moment = 0;
 			yaw_moment = 0;
 			p = 40;
-			statefunc = panic_mode;
+			statefunc = PANIC_MODE;
 			break;
 		case YAW_CONTROL_MODE:
 			cur_lift = pc_packet.data[1];
@@ -417,7 +446,7 @@ void full_control_mode()
 			p = 40;
 			p1 = 10;
 			p2 = 10;
-			statefunc = panic_mode;
+			statefunc = PANIC_MODE;
 			break;
 		case FULL_CONTROL_MODE:
 			cur_lift = pc_packet.data[1];
@@ -480,7 +509,7 @@ void full_control_mode()
 			}
 			break;
 		default:
-			printf("Not a valid mode!!\n");
+			//printf("Not a valid mode!!\n");
 			break;
 	}
 
@@ -573,9 +602,8 @@ void panic_mode()
 			//time_latest_packet_us = get_time_us();
 
 			//flag to print once in safe mode
-			safe_print = true;
 			//enters safe mode
-			statefunc = safe_mode;
+			statefunc = SAFE_MODE;
 			panic_loops = 0;
 		}
 		clear_panic_mode_timer_flag();
@@ -608,20 +636,6 @@ void safe_mode()
 	ae[2] = 0;
 	ae[3] = 0;
 	run_filters_and_control();
-	// if(safe_print==true)
-	// {
-	// 	printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
-	// 	safe_print=false;
-	// }
-
-	//check_connection();
-	//check_battery();
-	if(safe_print == true)
-	{
-		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
-		safe_print = false;
-	}
-
 
 	//if there is battery and the connection is ok read the messages
 	if(battery == true && connection == true)
@@ -636,26 +650,26 @@ void safe_mode()
 				{
 					//print your changed state
 					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",MANUAL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
-					statefunc = manual_mode;
+					statefunc = MANUAL_MODE;
 				}
 				break;
 			case SAFE_MODE:
 				break;
 			case CALIBRATION_MODE:
-				statefunc = calibration_mode;
+				statefunc = CALIBRATION_MODE;
 				break;
 			case YAW_CONTROL_MODE:
 				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
 				{
 					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",YAW_CONTROL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
-					statefunc = yaw_control_mode;
+					statefunc = YAW_CONTROL_MODE;
 				}
 				break;
 			case FULL_CONTROL_MODE:
 				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
 				{
 					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
-					statefunc = full_control_mode;
+					statefunc = FULL_CONTROL_MODE;
 				}
 				break;
 			default:
@@ -713,13 +727,12 @@ void initialize()
 	ae[3] = 0;
 	battery = true;
 	connection = true;
-	safe_print = true;
 	p = 40;
 	p1 = 10;
 	p2 = 10;
 	// p_ctrl=10;
 	//first get to safe mode
-	statefunc = safe_mode;
+	statefunc = SAFE_MODE;
 	counter = 0;
 	//set_mode(SAFE_MODE);
 }
@@ -736,7 +749,7 @@ void check_battery()
 		{
 			printf("bat voltage %d below threshold %d\n",bat_volt,BAT_THRESHOLD);
 			battery = false;
-			statefunc = panic_mode;
+			statefunc = PANIC_MODE;
 			//set_mode(PANIC_MODE);
 		}
 		else if(bat_volt < BAT_WARNING)
@@ -749,6 +762,33 @@ void check_battery()
 			printf("Battery true %d\n", bat_volt);
 		}
 		clear_timer_flag();
+	}
+}
+
+void run_modes()
+{
+	switch (statefunc) {
+		case SAFE_MODE:
+			safe_mode();
+			break;
+		case MANUAL_MODE:
+			manual_mode();
+			break;
+		case PANIC_MODE:
+			panic_mode();
+			break;
+		case YAW_CONTROL_MODE:
+			yaw_control_mode();
+			break;
+		case CALIBRATION_MODE:
+			calibration_mode();
+			break;
+		case FULL_CONTROL_MODE:
+			full_control_mode();
+			break;
+		default:
+			panic_mode();
+			break;
 	}
 }
 
@@ -765,7 +805,8 @@ int main(void){
 		check_battery();
 
 		//get to the state
-		(*statefunc)();
+		//(*statefunc)();
+		run_modes();
 
 		send_telemetry();
 		check_connection();
