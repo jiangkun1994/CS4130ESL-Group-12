@@ -21,6 +21,7 @@
 #include "app_util_platform.h"
 #include "protocol/protocol.h"
 #include <math.h>
+#include "drone.h"
 
 #define RED				22
 #define YELLOW		24

@@ -14,86 +14,16 @@
  */
 
 #include "in4073.h"
-#include "protocol/protocol.h"
-#include "drone.h"
 
 #define BAT_THRESHOLD   500
 #define BAT_WARNING			501
-
-#define MIN_RPM 184320 // 180 RPM
-#define MAX_RPM 460800 // 450 RPM
 
 uint8_t telemetry_packet[MAX_PAYLOAD];
 struct msg_telemetry_template msg_teleTX = {0};
 static struct packet rx = {0};
 struct msg_pc_template *msg_pcRX;
 uint8_t panic_loops = 0;
-
 uint32_t time_latest_packet_us, cur_time_us;
-
-//in this function calculate the values for the ae[] array makis
-void calculate_rpm(int Z, int L, int M, int N)
-{
-	// Z = lift
-	// L = row
-	// M = pitch
-	// N = yaw
-	int ae1[4],i;
-	//if there is lift force calculate ae[] array values
-	if(Z>0)
-	{
-		// //calculate the square of each motor rpm
-		// ae1[0] = 0.25*(Z + 2*M - N) + MIN_RPM;
-		// ae1[1] = 0.25*(Z - 2*L + N) + MIN_RPM;
-		// ae1[2] = 0.25*(Z - 2*M - N) + MIN_RPM;
-		// ae1[3] = 0.25*(Z + 2*L + N) + MIN_RPM;
-
-
-		// ae1[0] = 0.25*(Z + 2*M - N); // test without min RPM
-		// ae1[1] = 0.25*(Z - 2*L + N);
-		// ae1[2] = 0.25*(Z - 2*M - N);
-		// ae1[3] = 0.25*(Z + 2*L + N);
-
-		ae1[0] = Z + M - N;
-		ae1[1] = Z - L + N;
-		ae1[2] = Z - M - N;
-		ae1[3] = Z + L + N;
-		//printf("z:%d \t l:%d \t m:%d \t n:%d\n", Z, L, M, N);
-
-		//minimum rpm
-		for(i=0;i<4;i++)
-		{
-			if(ae1[i]<MIN_RPM)
-			{
-				ae1[i]=MIN_RPM;
-			}
-		}
-		//maximum rpm
-		for(i=0;i<4;i++)
-		{
-			if(ae1[i]>MAX_RPM)
-			{
-				ae1[i]=MAX_RPM;
-			}
-		}
-
-		// scale the values into those can be used in reality
-		ae[0]=ae1[0] >> 10;
-		ae[1]=ae1[1] >> 10;
-		ae[2]=ae1[2] >> 10;
-		ae[3]=ae1[3] >> 10;
-	}
-	//if there is no lift force everything should be shut down
-	else if(Z<=0)
-	{
-		ae[0]=0;
-		ae[1]=0;
-		ae[2]=0;
-		ae[3]=0;
-	}
-	//update motors
-	run_filters_and_control();
-}
 
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
