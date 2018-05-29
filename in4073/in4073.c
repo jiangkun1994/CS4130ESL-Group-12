@@ -311,19 +311,6 @@ void yaw_control_mode()
 		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment - sr)); // Not sure that whether the sr should multiply a constant or not
 	}
 
-	if (check_timer_flag())
-	{
-		if (counter++%15 == 0)
-		{
-			nrf_gpio_pin_toggle(BLUE);
-
-			//battery_check();
-
-			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, bat_volt=%d p_adjust=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],p,bat_volt, pc_packet.p_adjust);
-		}
-		clear_timer_flag();
-	}
-
 	handle_transmission_data();
 
 	switch (pc_packet.data[0])
@@ -417,19 +404,6 @@ void full_control_mode()
 		get_dmp_data();
 		//clear_sensor_int_flag();
 		calculate_rpm(lift_force, p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), p * (yaw_moment - (sr - sr_off)));
-	}
-
-	if (check_timer_flag())
-	{
-		if (counter++%15 == 0)
-		{
-			nrf_gpio_pin_toggle(BLUE);
-
-			//battery_check();
-
-			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
-		}
-		clear_timer_flag();
 	}
 
 	handle_transmission_data();

@@ -36,7 +36,6 @@ void print_input_kb_js(){
 
 /* sent the packet we created from pc to drone */
 void tx_packet(uint8_t *packet){
-	rs232_putchar(packet[3]);
 	int i = 0;
     while(i < packet[1]+PACKET_OVERHEAD){
        	rs232_putchar(packet[i]);
