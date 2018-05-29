@@ -94,6 +94,7 @@ int main(int argc, char **argv)
 					msg_pcTX.P1			= 0; //Dont know if we need to send P1
 					msg_pcTX.P2			= 0; //and or P2? MADE JUST IN CASE!
 					p_adjust = 0;
+					mode = IDLE_MODE;
 
 					create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
        		tx_packet(packet_from_pc);
@@ -121,7 +122,7 @@ int main(int argc, char **argv)
 								break;
 							case PACKET_TELEMETRY:
 								msg_teleRX = (struct msg_telemetry_template *)&rx.data[0];
-								mode = msg_teleRX->mode;
+								//mode = msg_teleRX->mode;
 
 								printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
 								printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);

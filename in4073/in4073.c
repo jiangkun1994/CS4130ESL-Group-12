@@ -103,7 +103,9 @@ void handle_transmission_data()
 				case PACKET_GENERAL:
 				msg_pcRX = (struct msg_pc_template *)&rx.data[0];
 
-				pc_packet.data[0] = msg_pcRX->mode;
+				if (msg_pcRX-> mode != IDLE_MODE)
+					pc_packet.data[0] = msg_pcRX->mode;
+
 				pc_packet.data[1] = msg_pcRX->lift;
 				pc_packet.data[2] = msg_pcRX->pitch;
 				pc_packet.data[3] = msg_pcRX->roll;
@@ -250,13 +252,27 @@ void calibration_mode()
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		printf("SAMPLE number:%d\n", sample);
+		//printf("SAMPLE number:%d\n", sample);
+		sp_off = sp_off + sp;
+		sq_off = sq_off + sq;
+		sr_off = sr_off + sr;
+		phi_off = phi_off + phi;
+		theta_off = theta_off + theta;
 		sample++;
 	}
 
-	if (sample > 5){
+	if (sample > 150){
+		// calculate the average off set for 150 samples
+		sp_off = sp_off / 150;
+		sq_off = sq_off / 150;
+		sr_off = sr_off / 150;
+		phi_off = phi_off / 150;
+		theta_off = theta_off / 150;
+		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
+		printf("CALIBRATION MODE FINISHED! \n");
 		statefunc = SAFE_MODE;
 		sample = 0;
+		pc_packet.data[0] = 0;
 	}
 }
 
