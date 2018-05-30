@@ -62,17 +62,17 @@ void send_telemetry()
 		msg_teleTX.engine[2] = ae[2];
 		msg_teleTX.engine[3] = ae[3];
 
-		msg_teleTX.phi = phi;
-		msg_teleTX.theta = theta;
-		msg_teleTX.psi = psi;
+		msg_teleTX.phi = phi; // roll angle
+		msg_teleTX.theta = theta; // pitch angle
+		msg_teleTX.psi = psi; // yaw angle
 
-		msg_teleTX.sp = sp;
-		msg_teleTX.sq = sq;
-		msg_teleTX.sr = sr;
+		msg_teleTX.sp = sp; // roll angular rate
+		msg_teleTX.sq = sq; // pitch angular rate
+		msg_teleTX.sr = sr; // yaw angular rate
 
-		msg_teleTX.sax = sax;
-		msg_teleTX.say = say;
-		msg_teleTX.saz = saz;
+		msg_teleTX.sax = sax; // x direction velocity
+		msg_teleTX.say = say; // y direction velocity
+		msg_teleTX.saz = saz; // z direction velocity
 
 		msg_teleTX.bat_volt = bat_volt;
 
