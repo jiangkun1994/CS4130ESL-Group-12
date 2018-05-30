@@ -749,8 +749,7 @@ void initialize()
 	p2 = 10;
 	// p_ctrl=10;
 	//first get to safe mode
-	statefunc = SAFE_MODE;
-	counter = 0;
+	statefunc = SAFE_MODE;;
 	//set_mode(SAFE_MODE);
 }
 
