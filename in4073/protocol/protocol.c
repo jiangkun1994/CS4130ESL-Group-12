@@ -40,12 +40,13 @@ void create_packet(uint8_t length, uint8_t packet_id, uint8_t *data, uint8_t *pa
 
 }
 
-void create_ack(uint8_t length, int8_t data, uint8_t *ack_packet){
+void create_ack(uint8_t length, uint8_t *data, uint8_t *ack_packet){
     ack_packet[0] = HEADER_VALUE;
     ack_packet[1] = length;
-    ack_packet[2] = PACKET_ACK; //packet id
-    ack_packet[3] = data;       //ACK or not
-    ack_packet[4] = crc_high_first((uint8_t*)&data, length);
+    ack_packet[2] = PACKET_ACK;     //packet id
+    ack_packet[3] = data[0];       //ACK or not
+    ack_packet[4] = data[1];       //MODE
+    ack_packet[5] = crc_high_first((uint8_t*)data, length);
 }
 
 // void create_telemetry_packet(uint8_t length, int8_t *data, uint8_t *telemetry_packet){
