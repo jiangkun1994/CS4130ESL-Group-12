@@ -94,8 +94,6 @@ struct msg_pc_template{
 	int8_t pitch;
 	int8_t yaw;
 	uint8_t P;
-	uint8_t P1;
-	uint8_t P2;
 }__attribute__((packed));
 
 struct msg_telemetry_template{

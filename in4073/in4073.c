@@ -78,6 +78,7 @@ void send_telemetry()
 
 		msg_teleTX.P = p;
 		msg_teleTX.P1 = p1;
+		msg_teleTX.P2 = p2;
 
 		create_packet(sizeof(struct msg_telemetry_template), PACKET_TELEMETRY, (uint8_t *) &msg_teleTX, telemetry_packet);
 
@@ -102,16 +103,17 @@ void handle_transmission_data()
 		if(!(flags & FLAG_2)){
 			switch(rx.packet_id) {
 				case PACKET_GENERAL:
-				msg_pcRX = (struct msg_pc_template *)&rx.data[0];
+					msg_pcRX = (struct msg_pc_template *)&rx.data[0];
 
-				if (msg_pcRX-> mode != IDLE_MODE)
-					pc_packet.data[0] = msg_pcRX->mode;
+					if (msg_pcRX-> mode != IDLE_MODE)
+						pc_packet.data[0] = msg_pcRX->mode;
 
-				pc_packet.data[1] = msg_pcRX->lift;
-				pc_packet.data[2] = msg_pcRX->pitch;
-				pc_packet.data[3] = msg_pcRX->roll;
-				pc_packet.data[4] = msg_pcRX->yaw;
-				pc_packet.p_adjust = msg_pcRX->P;
+					pc_packet.data[1] = msg_pcRX->lift;
+					pc_packet.data[2] = msg_pcRX->pitch;
+					pc_packet.data[3] = msg_pcRX->roll;
+					pc_packet.data[4] = msg_pcRX->yaw;
+					pc_packet.p_adjust = msg_pcRX->P;
+					break;
 				default:
 					break;
 			}

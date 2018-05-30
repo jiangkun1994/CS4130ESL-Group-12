@@ -91,8 +91,6 @@ int main(int argc, char **argv)
 					msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, 0);
 					msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, 0);
 					msg_pcTX.P 			= p_adjust;
-					msg_pcTX.P1			= 0; //Dont know if we need to send P1
-					msg_pcTX.P2			= 0; //and or P2? MADE JUST IN CASE!
 					p_adjust = 0;
 					mode = IDLE_MODE;
 
