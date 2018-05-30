@@ -371,6 +371,7 @@ void yaw_control_mode()
 	nrf_gpio_pin_write(YELLOW,1);
 	nrf_gpio_pin_write(GREEN,0);
 
+
 	//check_connection();
 	if(check_sensor_int_flag())
 	{
@@ -383,11 +384,23 @@ void yaw_control_mode()
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
-			lift_force = 0;
-			roll_moment = 0;
-			pitch_moment = 0;
-			yaw_moment = 0;
-			p = 40;
+			// lift_force = 0;
+			// roll_moment = 0;
+			// pitch_moment = 0;
+			// yaw_moment = 0;
+			// cur_lift = 0;
+			// cur_pitch = 0;
+			// cur_roll = 0;
+			// cur_yaw = 0;
+			// old_lift = 0;
+			// old_pitch = 0;
+			// old_roll = 0;
+			// old_yaw = 0;
+			// pc_packet.data[1] = 0; // lift
+			// pc_packet.data[2] = 0; // pitch
+			// pc_packet.data[3] = 0; // roll
+			// pc_packet.data[4] = 0; // yaw
+			// p = 0;
 			statefunc = PANIC_MODE;
 			break;
 		case YAW_CONTROL_MODE:
@@ -631,6 +644,11 @@ void panic_mode()
 			old_pitch = 0;
 			old_roll = 0;
 			old_yaw = 0;
+			lift_force = 0;
+			roll_moment = 0;
+			pitch_moment = 0;
+			yaw_moment = 0;
+
 
 			//print your changed state
 			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
