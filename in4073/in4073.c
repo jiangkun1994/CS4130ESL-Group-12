@@ -150,7 +150,7 @@ void update_actions()
 		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
 		roll_moment = cur_roll << 12;
 		pitch_moment = cur_pitch << 12;
-		yaw_moment = cur_yaw << 9;
+		yaw_moment = cur_yaw << 6;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -192,42 +192,6 @@ void manual_mode()
 	//if there is a new command do the calculations
 	update_actions();
 	calculate_rpm(lift_force, roll_moment, pitch_moment, yaw_moment);
-
-	// if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
-	// {
-	// 	lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-	// 	// if(cur_roll > 63)
-	// 	// {
-	// 	// 	roll_moment = ((cur_roll - 128) * 2000);
-	// 	// }
-	// 	//else{
-	// 	roll_moment = cur_roll << 12;
-	// 	//}
-	// 	// if(cur_pitch > 63)
-	// 	// {
-	// 	// 	pitch_moment = ((cur_pitch - 128) * 2000);
-	// 	// }
-	// 	//else{
-	// 	pitch_moment = cur_pitch << 12;
-	// 	//}
-	// 	// if(cur_yaw > 63)
-	// 	// {
-	// 	// 	yaw_moment = ((cur_yaw - 128) * 4000);
-	// 	// }
-	// 	//else{
-	// 	yaw_moment = cur_yaw << 13;
-	// 	//}
-
-	// 	calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
-
-	// 	old_lift = cur_lift;
-	// 	old_roll = cur_roll;
-	// 	old_pitch = cur_pitch;
-	// 	old_yaw = cur_yaw;
-	// 	//print your changed state
-	// 	//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
-	// }
-
 	//while there is no message received wait here and check your connection
 	// while(msg==false && connection==true)
 	// {
@@ -376,7 +340,7 @@ void yaw_control_mode()
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, yaw_moment -  p * (yaw_moment - sr)); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(lift_force, roll_moment, pitch_moment, /*yaw_moment - */  p * (yaw_moment - sr)); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
@@ -384,23 +348,7 @@ void yaw_control_mode()
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
-			// lift_force = 0;
-			// roll_moment = 0;
-			// pitch_moment = 0;
-			// yaw_moment = 0;
-			// cur_lift = 0;
-			// cur_pitch = 0;
-			// cur_roll = 0;
-			// cur_yaw = 0;
-			// old_lift = 0;
-			// old_pitch = 0;
-			// old_roll = 0;
-			// old_yaw = 0;
-			// pc_packet.data[1] = 0; // lift
-			// pc_packet.data[2] = 0; // pitch
-			// pc_packet.data[3] = 0; // roll
-			// pc_packet.data[4] = 0; // yaw
-			// p = 0;
+			p = 15;
 			statefunc = PANIC_MODE;
 			break;
 		case YAW_CONTROL_MODE:
@@ -434,41 +382,6 @@ void yaw_control_mode()
 
 	//if there is a new command do the calculations
 	update_actions();
-	// if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
-	// {
-	// 	lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-	// 	// if(cur_roll > 63)
-	// 	// {
-	// 	// 	roll_moment = ((cur_roll - 128) * 2000);
-	// 	// }
-	// 	//else{
-	// 	roll_moment = cur_roll << 11;
-	// 	//}
-	// 	// if(cur_pitch > 63)
-	// 	// {
-	// 	// 	pitch_moment = ((cur_pitch - 128) * 2000);
-	// 	// }
-	// 	//else{
-	// 	pitch_moment = cur_pitch << 11;
-	// 	//}
-	// 	// if(cur_yaw > 63)
-	// 	// {
-	// 	// 	yaw_moment = ((cur_yaw - 128) * 4000);
-	// 	// }
-	// 	//else{
-	// 	yaw_moment = cur_yaw << 12;
-	// 	//}
-
-	// 	//calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
-
-	// 	old_lift = cur_lift;
-	// 	old_roll = cur_roll;
-	// 	old_pitch = cur_pitch;
-	// 	old_yaw = cur_yaw;
-	// 	//print your changed state
-	// 	//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],p,bat_volt);
-	// }
-
 }
 
 void full_control_mode()
@@ -491,11 +404,7 @@ void full_control_mode()
 	switch(pc_packet.data[0])
 	{
 		case PANIC_MODE:
-			lift_force = 0;
-			roll_moment = 0;
-			pitch_moment = 0;
-			yaw_moment = 0;
-			p = 40;
+			p = 15;
 			p1 = 10;
 			p2 = 10;
 			statefunc = PANIC_MODE;
@@ -567,42 +476,6 @@ void full_control_mode()
 
 	//if there is a new command do the calculations
 	update_actions();
-	// if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
-	// {
-	// 	lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-	// 	// if(cur_roll > 63)
-	// 	// {
-	// 	// 	roll_moment = ((cur_roll - 128) * 2000);
-	// 	// }
-	// 	//else{
-	// 	roll_moment = cur_roll << 11;
-	// 	//}
-	// 	// if(cur_pitch > 63)
-	// 	// {
-	// 	// 	pitch_moment = ((cur_pitch - 128) * 2000);
-	// 	// }
-	// 	//else{
-	// 	pitch_moment = cur_pitch << 11;
-	// 	//}
-	// 	// if(cur_yaw > 63)
-	// 	// {
-	// 	// 	yaw_moment = ((cur_yaw - 128) * 4000);
-	// 	// }
-	// 	//else{
-	// 	yaw_moment = cur_yaw << 12;
-	// 	//}
-
-	// 	//calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
-
-	// 	old_lift = cur_lift;
-	// 	old_roll = cur_roll;
-	// 	old_pitch = cur_pitch;
-	// 	old_yaw = cur_yaw;
-	// 	//print your changed state
-	// 	//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
-	// }
-
-
 }
 
 //panic mode state makis
@@ -657,7 +530,7 @@ void panic_mode()
 			//nrf_delay_ms(2000);
 
 			//fixes a bug, doesn't care to check connection going to safe mode anyway
-			//time_latest_packet_us = get_time_us();
+			time_latest_packet_us = get_time_us();
 
 			//flag to print once in safe mode
 			//enters safe mode
@@ -785,7 +658,7 @@ void initialize()
 	ae[3] = 0;
 	battery = true;
 	connection = true;
-	p = 40;
+	p = 15;
 	p1 = 10;
 	p2 = 10;
 	// p_ctrl=10;

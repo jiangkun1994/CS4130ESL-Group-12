@@ -13,7 +13,7 @@
 #include "in4073.h"
 
 #define MIN_RPM 184320 // 180 RPM
-#define MAX_RPM 563200 // 450 RPM
+#define MAX_RPM 460800 // 450 RPM
 
 void update_motors(void)
 {
@@ -48,10 +48,10 @@ void calculate_rpm(int Z, int L, int M, int N)
 	if(Z>0)
 	{
 		//calculate the square of each motor rpm
-		ae1[0] = 0.25*(Z + 2*M - N) + MIN_RPM;
-		ae1[1] = 0.25*(Z - 2*L + N) + MIN_RPM;
-		ae1[2] = 0.25*(Z - 2*M - N) + MIN_RPM;
-		ae1[3] = 0.25*(Z + 2*L + N) + MIN_RPM;
+		// ae1[0] = 0.25*(Z + 2*M - N) + MIN_RPM;
+		// ae1[1] = 0.25*(Z - 2*L + N) + MIN_RPM;
+		// ae1[2] = 0.25*(Z - 2*M - N) + MIN_RPM;
+		// ae1[3] = 0.25*(Z + 2*L + N) + MIN_RPM;
 
 
 		// ae1[0] = 0.25*(Z + 2*M - N); // test without min RPM
@@ -59,10 +59,10 @@ void calculate_rpm(int Z, int L, int M, int N)
 		// ae1[2] = 0.25*(Z - 2*M - N);
 		// ae1[3] = 0.25*(Z + 2*L + N);
 
-		// ae1[0] = Z + M - N;
-		// ae1[1] = Z - L + N;
-		// ae1[2] = Z - M - N;
-		// ae1[3] = Z + L + N;
+		ae1[0] = Z + M - N;
+		ae1[1] = Z - L + N;
+		ae1[2] = Z - M - N;
+		ae1[3] = Z + L + N;
 		//printf("z:%d \t l:%d \t m:%d \t n:%d\n", Z, L, M, N);
 
 		//minimum rpm
