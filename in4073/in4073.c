@@ -77,6 +77,7 @@ void send_telemetry()
 		msg_teleTX.bat_volt = bat_volt;
 
 		msg_teleTX.P = p;
+		msg_teleTX.P1 = p1;
 
 		create_packet(sizeof(struct msg_telemetry_template), PACKET_TELEMETRY, (uint8_t *) &msg_teleTX, telemetry_packet);
 
