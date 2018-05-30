@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	struct msg_telemetry_template *msg_teleRX;
 	rx.status = INIT;
 
-	//js_init();
+	js_init();
 
 	term_puts("\nTerminal program - Embedded Real-Time Systems\n");
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
 	while(1){
 
-        //read_js(fd);
+        read_js(fd);
 
         while ((c = term_getchar_nb()) != -1){
         	kb_input(c);
@@ -86,16 +86,16 @@ int main(int argc, char **argv)
         current_time = mon_time_ms();
         if(((current_time - old_time) > 10) && (connection_failure_flag == 0)){
 					msg_pcTX.mode 	= mode;
-					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, 0);
-					msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, 0);
-					msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, 0);
-					msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, 0);
+					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, js_lift);
+					msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, js_roll);
+					msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, js_pitch);
+					msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, js_yaw);
 					msg_pcTX.P 			= p_adjust;
 					p_adjust = 0;
 					mode = IDLE_MODE;
 
 					create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
-       		tx_packet(packet_from_pc);
+       				tx_packet(packet_from_pc);
 
 					old_time = current_time;
 

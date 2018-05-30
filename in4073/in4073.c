@@ -16,7 +16,7 @@
 #include "in4073.h"
 
 #define BAT_THRESHOLD   500
-#define BAT_WARNING			501
+#define BAT_WARNING		501
 
 uint8_t telemetry_packet[MAX_PAYLOAD];
 struct msg_telemetry_template msg_teleTX = {0};
@@ -143,6 +143,22 @@ void check_connection()
 	}
 }
 
+void update_actions()
+{
+	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
+	{
+		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 12;
+		pitch_moment = cur_pitch << 12;
+		yaw_moment = cur_yaw << 9;
+		old_lift = cur_lift;
+		old_roll = cur_roll;
+		old_pitch = cur_pitch;
+		old_yaw = cur_yaw;
+	}
+}
+
+
 void manual_mode()
 {
 	cur_mode = MANUAL_MODE;
@@ -174,40 +190,43 @@ void manual_mode()
 	}
 
 	//if there is a new command do the calculations
-	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
-	{
-		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		// if(cur_roll > 63)
-		// {
-		// 	roll_moment = ((cur_roll - 128) * 2000);
-		// }
-		//else{
-		roll_moment = cur_roll << 12;
-		//}
-		// if(cur_pitch > 63)
-		// {
-		// 	pitch_moment = ((cur_pitch - 128) * 2000);
-		// }
-		//else{
-		pitch_moment = cur_pitch << 12;
-		//}
-		// if(cur_yaw > 63)
-		// {
-		// 	yaw_moment = ((cur_yaw - 128) * 4000);
-		// }
-		//else{
-		yaw_moment = cur_yaw << 13;
-		//}
+	update_actions();
+	calculate_rpm(lift_force, roll_moment, pitch_moment, yaw_moment);
 
-		calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
+	// if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
+	// {
+	// 	lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
+	// 	// if(cur_roll > 63)
+	// 	// {
+	// 	// 	roll_moment = ((cur_roll - 128) * 2000);
+	// 	// }
+	// 	//else{
+	// 	roll_moment = cur_roll << 12;
+	// 	//}
+	// 	// if(cur_pitch > 63)
+	// 	// {
+	// 	// 	pitch_moment = ((cur_pitch - 128) * 2000);
+	// 	// }
+	// 	//else{
+	// 	pitch_moment = cur_pitch << 12;
+	// 	//}
+	// 	// if(cur_yaw > 63)
+	// 	// {
+	// 	// 	yaw_moment = ((cur_yaw - 128) * 4000);
+	// 	// }
+	// 	//else{
+	// 	yaw_moment = cur_yaw << 13;
+	// 	//}
 
-		old_lift = cur_lift;
-		old_roll = cur_roll;
-		old_pitch = cur_pitch;
-		old_yaw = cur_yaw;
-		//print your changed state
-		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
-	}
+	// 	calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
+
+	// 	old_lift = cur_lift;
+	// 	old_roll = cur_roll;
+	// 	old_pitch = cur_pitch;
+	// 	old_yaw = cur_yaw;
+	// 	//print your changed state
+	// 	//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
+	// }
 
 	//while there is no message received wait here and check your connection
 	// while(msg==false && connection==true)
@@ -356,7 +375,7 @@ void yaw_control_mode()
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment - sr)); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(lift_force, roll_moment, pitch_moment, yaw_moment -  p * (yaw_moment - sr)); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
@@ -401,40 +420,41 @@ void yaw_control_mode()
 	}
 
 	//if there is a new command do the calculations
-	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
-	{
-		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		// if(cur_roll > 63)
-		// {
-		// 	roll_moment = ((cur_roll - 128) * 2000);
-		// }
-		//else{
-		roll_moment = cur_roll << 11;
-		//}
-		// if(cur_pitch > 63)
-		// {
-		// 	pitch_moment = ((cur_pitch - 128) * 2000);
-		// }
-		//else{
-		pitch_moment = cur_pitch << 11;
-		//}
-		// if(cur_yaw > 63)
-		// {
-		// 	yaw_moment = ((cur_yaw - 128) * 4000);
-		// }
-		//else{
-		yaw_moment = cur_yaw << 12;
-		//}
+	update_actions();
+	// if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
+	// {
+	// 	lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
+	// 	// if(cur_roll > 63)
+	// 	// {
+	// 	// 	roll_moment = ((cur_roll - 128) * 2000);
+	// 	// }
+	// 	//else{
+	// 	roll_moment = cur_roll << 11;
+	// 	//}
+	// 	// if(cur_pitch > 63)
+	// 	// {
+	// 	// 	pitch_moment = ((cur_pitch - 128) * 2000);
+	// 	// }
+	// 	//else{
+	// 	pitch_moment = cur_pitch << 11;
+	// 	//}
+	// 	// if(cur_yaw > 63)
+	// 	// {
+	// 	// 	yaw_moment = ((cur_yaw - 128) * 4000);
+	// 	// }
+	// 	//else{
+	// 	yaw_moment = cur_yaw << 12;
+	// 	//}
 
-		//calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
+	// 	//calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
 
-		old_lift = cur_lift;
-		old_roll = cur_roll;
-		old_pitch = cur_pitch;
-		old_yaw = cur_yaw;
-		//print your changed state
-		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],p,bat_volt);
-	}
+	// 	old_lift = cur_lift;
+	// 	old_roll = cur_roll;
+	// 	old_pitch = cur_pitch;
+	// 	old_yaw = cur_yaw;
+	// 	//print your changed state
+	// 	//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],p,bat_volt);
+	// }
 
 }
 
@@ -451,7 +471,7 @@ void full_control_mode()
 	{
 		get_dmp_data();
 		//clear_sensor_int_flag();
-		calculate_rpm(lift_force, p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), p * (yaw_moment - (sr - sr_off)));
+		calculate_rpm(lift_force, p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), yaw_moment - p * (yaw_moment - (sr - sr_off)));
 	}
 
 	handle_transmission_data();
@@ -533,40 +553,41 @@ void full_control_mode()
 	}
 
 	//if there is a new command do the calculations
-	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
-	{
-		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		// if(cur_roll > 63)
-		// {
-		// 	roll_moment = ((cur_roll - 128) * 2000);
-		// }
-		//else{
-		roll_moment = cur_roll << 11;
-		//}
-		// if(cur_pitch > 63)
-		// {
-		// 	pitch_moment = ((cur_pitch - 128) * 2000);
-		// }
-		//else{
-		pitch_moment = cur_pitch << 11;
-		//}
-		// if(cur_yaw > 63)
-		// {
-		// 	yaw_moment = ((cur_yaw - 128) * 4000);
-		// }
-		//else{
-		yaw_moment = cur_yaw << 12;
-		//}
+	update_actions();
+	// if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
+	// {
+	// 	lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
+	// 	// if(cur_roll > 63)
+	// 	// {
+	// 	// 	roll_moment = ((cur_roll - 128) * 2000);
+	// 	// }
+	// 	//else{
+	// 	roll_moment = cur_roll << 11;
+	// 	//}
+	// 	// if(cur_pitch > 63)
+	// 	// {
+	// 	// 	pitch_moment = ((cur_pitch - 128) * 2000);
+	// 	// }
+	// 	//else{
+	// 	pitch_moment = cur_pitch << 11;
+	// 	//}
+	// 	// if(cur_yaw > 63)
+	// 	// {
+	// 	// 	yaw_moment = ((cur_yaw - 128) * 4000);
+	// 	// }
+	// 	//else{
+	// 	yaw_moment = cur_yaw << 12;
+	// 	//}
 
-		//calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
+	// 	//calculate_rpm(lift_force,roll_moment,pitch_moment,yaw_moment);
 
-		old_lift = cur_lift;
-		old_roll = cur_roll;
-		old_pitch = cur_pitch;
-		old_yaw = cur_yaw;
-		//print your changed state
-		//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
-	}
+	// 	old_lift = cur_lift;
+	// 	old_roll = cur_roll;
+	// 	old_pitch = cur_pitch;
+	// 	old_yaw = cur_yaw;
+	// 	//print your changed state
+	// 	//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
+	// }
 
 
 }
