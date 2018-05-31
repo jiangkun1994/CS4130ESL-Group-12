@@ -143,7 +143,22 @@ void check_connection()
 	}
 }
 
-void update_actions()
+void update_actions_manual_control()
+{
+	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
+	{
+		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 12;
+		pitch_moment = cur_pitch << 12;
+		yaw_moment = cur_yaw << 13;
+		old_lift = cur_lift;
+		old_roll = cur_roll;
+		old_pitch = cur_pitch;
+		old_yaw = cur_yaw;
+	}
+}
+
+void update_actions_yaw_control()
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
@@ -158,6 +173,20 @@ void update_actions()
 	}
 }
 
+void update_actions_full_control()
+{
+	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
+	{
+		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 12;
+		pitch_moment = cur_pitch << 12;
+		yaw_moment = cur_yaw << 6;
+		old_lift = cur_lift;
+		old_roll = cur_roll;
+		old_pitch = cur_pitch;
+		old_yaw = cur_yaw;
+	}
+}
 
 void manual_mode()
 {
@@ -190,7 +219,7 @@ void manual_mode()
 	}
 
 	//if there is a new command do the calculations
-	update_actions();
+	update_actions_manual_control();
 	calculate_rpm(lift_force, roll_moment, pitch_moment, yaw_moment);
 	//while there is no message received wait here and check your connection
 	// while(msg==false && connection==true)
@@ -218,7 +247,9 @@ void manual_mode()
 	// }
 }
 
-void calibration_mode()
+
+/* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
+void calibration_mode() // what is the advice from TA about calibration mode? Some initial values from DMP are not right?
 {
 	cur_mode = CALIBRATION_MODE;
 
@@ -262,71 +293,10 @@ void calibration_mode()
 	}
 }
 
-// /* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
-// void calibration_mode() // PROBLEM: repeat the calibrarion mode, the mode does not syncronize???  Maybe the function sent_telemetry should in each mode or it is the problem of check telemetry time lag.
-// {
-// 	cur_mode = CALIBRATION_MODE;
-//
-// 	sp_off = 0;
-// 	sq_off = 0;
-// 	sr_off = 0;
-// 	phi_off = 0;
-// 	theta_off = 0;
-//
-// 	//indicate that you are in calibration mode
-// 	nrf_gpio_pin_write(RED,1);
-// 	nrf_gpio_pin_write(YELLOW,1);
-// 	nrf_gpio_pin_write(GREEN,0);
-//
-// 	// the number of samples read from sensors
-// 	int sample = 0;
-//
-// 	// get the sum of offset for 150 samples
-// 	while(sample < 150)
-// 	{
-// 		if(check_sensor_int_flag()) // ???
-// 		{
-// 			get_dmp_data();
-// 			//clear_sensor_int_flag();
-// 			sp_off = sp_off + sp;
-// 			sq_off = sq_off + sq;
-// 			sr_off = sr_off + sr;
-// 			phi_off = phi_off + phi;
-// 			theta_off = theta_off + theta;
-// 			sample++;
-// 		}
-// 	}
-//
-// 	// calculate the average off set for 150 samples
-// 	sp_off = sp_off / 150;
-// 	sq_off = sq_off / 150;
-// 	sr_off = sr_off / 150;
-// 	phi_off = phi_off / 150;
-// 	theta_off = theta_off / 150;
-//
-// 	// when in calibration mode, no parse packet, so add this to indicate you are still in conncection
-// 	time_latest_packet_us = get_time_us();
-//
-// 	printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
-// 	printf("CALIBRATION MODE FINISHED! \n");
-//
-// 	// handle_transmission_data();
-// 	//
-// 	// switch(pc_packet.data[0])
-// 	// {
-// 	// 	case SAFE_MODE:
-// 	// 		statefunc = SAFE_MODE;
-// 	// 		break;
-// 	// 	case PANIC_MODE:
-// 	// 		statefunc = PANIC_MODE;
-// 	// 		break;
-// 	// 	default:
-// 	// 		break;
-// 	// }
-// 	statefunc = SAFE_MODE;
-// }
+/* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
 
-void yaw_control_mode()
+
+void yaw_control_mode() // also need calibration mode to read sr_off
 {
 	cur_mode = YAW_CONTROL_MODE;
 
@@ -340,7 +310,7 @@ void yaw_control_mode()
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, /*yaw_moment - */  p * (yaw_moment - sr)); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment - (sr - sr_off))); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
@@ -381,7 +351,7 @@ void yaw_control_mode()
 	}
 
 	//if there is a new command do the calculations
-	update_actions();
+	update_actions_yaw_control();
 }
 
 void full_control_mode()
@@ -396,9 +366,8 @@ void full_control_mode()
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		//clear_sensor_int_flag();
-		calculate_rpm(lift_force, p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), yaw_moment - p * (yaw_moment - (sr - sr_off)));
-	}
+		calculate_rpm(lift_force, p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), p * (yaw_moment - (sr - sr_off)));
+	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
 	switch(pc_packet.data[0])
@@ -475,7 +444,7 @@ void full_control_mode()
 	}
 
 	//if there is a new command do the calculations
-	update_actions();
+	update_actions_full_control();
 }
 
 //panic mode state makis
