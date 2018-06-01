@@ -10,7 +10,7 @@
 #define HEADER_VALUE							0x80
 #define MAX_PAYLOAD								80
 #define PACKET_OVERHEAD						4
-#define PACKET_ACK_LENGTH   			5
+#define PACKET_ACK_LENGTH   			7
 #define PACKET_TELEMETRY_LENGTH		27
 
 /* type of packet */
@@ -20,7 +20,7 @@
 
 /* the length for each type of packet */
 //#define LENGTH_GENERAL		5
-#define LENGTH_ACK				1
+#define LENGTH_ACK				2
 //#define LENGTH_TELEMETRY	23
 
 
@@ -116,7 +116,7 @@ struct msg_telemetry_template{
 void protocol_init();
 uint8_t crc_high_first(uint8_t *ptr, unsigned char len);
 void create_packet(uint8_t length, uint8_t packet_id, uint8_t *data, uint8_t *packet);
-void create_ack(uint8_t length, int8_t data, uint8_t *ack_packet);
+void create_ack(uint8_t length, uint8_t *data, uint8_t *ack_packet);
 //void create_telemetry_packet(uint8_t length, int8_t *data, uint8_t *telemetry_packet);
 uint8_t parse_packet(struct packet *rx, uint8_t c);
 

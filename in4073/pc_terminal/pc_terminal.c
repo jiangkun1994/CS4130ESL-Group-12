@@ -86,13 +86,12 @@ int main(int argc, char **argv)
         current_time = mon_time_ms();
         if(((current_time - old_time) > 10) && (connection_failure_flag == 0)){
 					msg_pcTX.mode 	= mode;
-					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, js_lift);
-					msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, js_roll);
-					msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, js_pitch);
-					msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, js_yaw);
+					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, 0);
+					msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, 0);
+					msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, 0);
+					msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, 0);
 					msg_pcTX.P 			= p_adjust;
 					p_adjust = 0;
-					mode = IDLE_MODE;
 
 					create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
        				tx_packet(packet_from_pc);
@@ -117,10 +116,17 @@ int main(int argc, char **argv)
 									tx_packet(packet_from_pc);
 									old_time = mon_time_ms();
 								}
+								else
+								{
+									if (rx.data[1] == CALIBRATION_MODE)
+										mode = SAFE_MODE;
+									else
+										mode = rx.data[1];
+									//printf("MODE CHANGED CORRECTLY TO %d\n", rx.data[1]);
+								}
 								break;
 							case PACKET_TELEMETRY:
 								msg_teleRX = (struct msg_telemetry_template *)&rx.data[0];
-								//mode = msg_teleRX->mode;
 
 								printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
 								printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);

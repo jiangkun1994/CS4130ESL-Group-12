@@ -30,10 +30,9 @@ uint8_t sample = 0;
  * send_ack -- send acknowledgement
  *------------------------------------------------------------------
  */
-void send_ack(uint8_t data)
+void send_ack(uint8_t *data)
 {
 	uint8_t ack_packet[PACKET_ACK_LENGTH];
-	//create_ack(LENGTH_ACK, pc_packet.p_adjust, data, ack_packet);
 	create_ack(LENGTH_ACK, data, ack_packet);
 
 	int i = 0;
@@ -105,9 +104,14 @@ void handle_transmission_data()
 				case PACKET_GENERAL:
 					msg_pcRX = (struct msg_pc_template *)&rx.data[0];
 
-					if (msg_pcRX-> mode != IDLE_MODE)
+					if (msg_pcRX-> mode != pc_packet.data[0])
+					{
 						pc_packet.data[0] = msg_pcRX->mode;
-
+						uint8_t data[2];
+						data[0] = flags;
+						data[1] = pc_packet.data[0];
+						send_ack(data); //Only if mode change, send ack
+					}
 					pc_packet.data[1] = msg_pcRX->lift;
 					pc_packet.data[2] = msg_pcRX->pitch;
 					pc_packet.data[3] = msg_pcRX->roll;
@@ -264,6 +268,8 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 	nrf_gpio_pin_write(YELLOW,1);
 	nrf_gpio_pin_write(GREEN,0);
 
+	handle_transmission_data();
+
 	time_latest_packet_us = get_time_us();
 
 	if(check_sensor_int_flag())
@@ -289,7 +295,6 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		printf("CALIBRATION MODE FINISHED! \n");
 		statefunc = SAFE_MODE;
 		sample = 0;
-		pc_packet.data[0] = 0;
 	}
 }
 
