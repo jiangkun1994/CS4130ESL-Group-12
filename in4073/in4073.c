@@ -293,8 +293,6 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 	}
 }
 
-/* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
-
 
 void yaw_control_mode() // also need calibration mode to read sr_off
 {

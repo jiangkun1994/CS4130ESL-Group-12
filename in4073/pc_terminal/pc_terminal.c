@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	struct msg_telemetry_template *msg_teleRX;
 	rx.status = INIT;
 
-	js_init();
+	//js_init();
 
 	term_puts("\nTerminal program - Embedded Real-Time Systems\n");
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
 	while(1){
 
-        read_js(fd);
+        //read_js(fd);
 
         while ((c = term_getchar_nb()) != -1){
         	kb_input(c);
