@@ -1,1 +1,3 @@
 /in4073/_build
+*.pyc
+*pc-terminal*
