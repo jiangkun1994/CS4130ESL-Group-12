@@ -287,7 +287,7 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		}
 	}
 
-	if (sample >= 150){
+	if (sample >= 151){
 		// calculate the average off set for 150 samples
 		sp_off = sp_off / 150;
 		sq_off = sq_off / 150;
