@@ -41,10 +41,8 @@
 #include <errno.h>
 #include <string.h>
 #include <stdbool.h>
-#include "console_rs232.h"
 
-/* time
- */
+/* time */
 #include <time.h>
 #include <assert.h>
 
