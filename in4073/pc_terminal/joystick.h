@@ -40,6 +40,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <stdbool.h>
+#include "console_rs232.h"
 
 /* time
  */
@@ -168,12 +170,6 @@ void js_init();
 int read_js(int fd);
 
 // /* arguments in joystick.c */
-// int	axis[6];
-// int	button[10];
-// int fd;
-// char js_lift;
-// char js_yaw;
-// char js_pitch;
-// char js_roll;
+extern bool read_joystick;
 
 #endif /* _LINUX_JOYSTICK_H */
