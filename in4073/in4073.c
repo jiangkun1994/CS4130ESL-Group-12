@@ -142,6 +142,7 @@ void check_connection()
 		{
 			connection = false;
 			statefunc = PANIC_MODE;
+			printf("CONNECTION IS LOST, ENTERING PANIC MODE\n");
 		}
 		clear_connection_timer_flag();
 	}
@@ -270,21 +271,23 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 
 	handle_transmission_data();
 
-	time_latest_packet_us = get_time_us();
-
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
 		//printf("SAMPLE number:%d\n", sample);
-		sp_off = sp_off + sp;
-		sq_off = sq_off + sq;
-		sr_off = sr_off + sr;
-		phi_off = phi_off + phi;
-		theta_off = theta_off + theta;
-		sample++;
+
+		// Need to check if data from DMP are junk data
+		if (CHECK_RANGE(sp, sq, sr, 5)){
+			sp_off = sp_off + sp;
+			sq_off = sq_off + sq;
+			sr_off = sr_off + sr;
+			phi_off = phi_off + phi;
+			theta_off = theta_off + theta;
+			sample++;
+		}
 	}
 
-	if (sample > 150){
+	if (sample >= 150){
 		// calculate the average off set for 150 samples
 		sp_off = sp_off / 150;
 		sq_off = sq_off / 150;

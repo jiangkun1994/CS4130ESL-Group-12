@@ -122,8 +122,31 @@ void set_js_packet_lift(char action, unsigned int axis){
 
 void js_init(){
 	if ((fd = open(JS_DEV, O_RDONLY)) < 0) {
-		perror("jstest");
-		exit(1);
+		//perror("jstest");
+    //exit(1);
+    // printf("NO JOYSTICK FOUND, DO YOU WANT TO RUN IN KEYBOARD MODE ONLY [y/n]: ");
+    // char r;
+    // r = getchar();
+    // while(r != 'n' && r != 'N' && r != 'y' && r != 'Y')
+    // {
+    //   printf("invalid input, enter the choice(y/Y/n/N) again : ");
+    //   r = getchar();
+    //   if (r == '\n') r = getchar();
+    // }
+    //
+    // if (r == 'n' || r == 'N'){
+    //   printf("EXITING PROGRAM\n");
+    //   exit(1);
+    // }
+    // else if (r == 'y'|| r == 'Y')
+    // {
+      read_joystick = false;
+      js_lift = 0;
+      js_roll = 0;
+      js_pitch = 0;
+      js_yaw = 0;
+      printf("NO JOYSTICK FOUND, RUNING PROGRAM IN KEYBOARD MODE ONLY\n");
+    //}
 	}
 
 	/* non-blocking mode

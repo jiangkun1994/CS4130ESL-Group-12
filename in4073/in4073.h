@@ -29,6 +29,7 @@
 #define BLUE			30
 #define INT_PIN		5
 
+#define CHECK_RANGE(x,y,z,n) ( (x > -n  && x < n && y > -n && y < n && z > -n && z < n) ? 1 : 0)
 bool demo_done;
 
 // Control
