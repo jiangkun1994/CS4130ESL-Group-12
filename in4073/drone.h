@@ -58,3 +58,4 @@ extern uint32_t time_latest_packet_us, cur_time_us;
 //flags indicating that there is still connection and battery
 bool connection;
 bool battery;
+uint8_t counter;

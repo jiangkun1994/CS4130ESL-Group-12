@@ -24,7 +24,7 @@ static struct packet rx = {0};
 struct msg_pc_template *msg_pcRX;
 uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
-uint8_t sample = 0;
+uint16_t sample = 0;
 
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
@@ -369,7 +369,10 @@ void full_control_mode()
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), p * (yaw_moment - (sr - sr_off)));
+		calculate_rpm(lift_force, 
+			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), 
+			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), 
+			p * (yaw_moment - (sr - sr_off)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
@@ -630,6 +633,7 @@ void initialize()
 	ae[3] = 0;
 	battery = true;
 	connection = true;
+	counter = 0;
 	p = 15;
 	p1 = 10;
 	p2 = 10;
