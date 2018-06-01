@@ -104,12 +104,14 @@ struct msg_telemetry_template{
  	int8_t yaw;
  	int16_t engine[4];
  	int16_t phi, theta, psi;
-  int16_t sp, sq, sr;
-  int16_t sax, say, saz;
-  uint16_t bat_volt;
-  uint8_t P;
-  uint8_t P1;
-  uint8_t P2;
+  	int16_t sp, sq, sr;
+  	int16_t sax, say, saz;
+  	uint16_t bat_volt;
+  	uint8_t P;
+  	uint8_t P1;
+  	uint8_t P2;
+  	int32_t pressure;
+	int32_t temperature;
 	uint32_t Time_stamp;
 }__attribute__((packed));
 

@@ -78,6 +78,8 @@ void send_telemetry()
 		msg_teleTX.P = p;
 		msg_teleTX.P1 = p1;
 		msg_teleTX.P2 = p2;
+		msg_teleTX.pressure = pressure;
+		msg_teleTX.temperature = temperature;
 
 		create_packet(sizeof(struct msg_telemetry_template), PACKET_TELEMETRY, (uint8_t *) &msg_teleTX, telemetry_packet);
 
@@ -715,6 +717,10 @@ int main(void){
 
 		//get to the state
 		//(*statefunc)();
+		if(check_sensor_int_flag())
+		{
+			read_baro();
+		}
 		run_modes();
 
 		send_telemetry();
