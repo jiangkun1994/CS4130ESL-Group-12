@@ -674,6 +674,10 @@ void check_battery()
 			battery = false;
 			if(statefunc != SAFE_MODE){
 				statefunc = PANIC_MODE;
+				uint8_t data[2];
+				data[0] = FLAG_1;
+				data[1] = PANIC_MODE;
+				send_ack(data); //Only if mode change, send ack
 			}
 		}
 		else if ((bat_volt > BAT_THRESHOLD) && !battery)
