@@ -333,7 +333,7 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
-			p = 15;
+			p = 1;
 			statefunc = PANIC_MODE;
 			break;
 		case YAW_CONTROL_MODE:
@@ -391,9 +391,9 @@ void full_control_mode()
 	switch(pc_packet.data[0])
 	{
 		case PANIC_MODE:
-			p = 15;
-			p1 = 10;
-			p2 = 10;
+			p = 1;
+			p1 = 1;
+			p2 = 1;
 			statefunc = PANIC_MODE;
 			break;
 		case FULL_CONTROL_MODE:
@@ -648,10 +648,11 @@ void initialize()
 	ae[3] = 0;
 	battery = true;
 	connection = true;
+
 	counter = 0;
-	p = 15;
-	p1 = 10;
-	p2 = 10;
+	p = 1;
+	p1 = 1;
+	p2 = 1;
 
 	calibration_flag = false;
 
