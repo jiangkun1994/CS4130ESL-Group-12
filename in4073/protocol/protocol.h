@@ -58,6 +58,8 @@
 #define P1_ROLL_PITCH_DOWN	0x08
 #define P2_ROLL_PITCH_UP		0x10
 #define P2_ROLL_PITCH_DOWN	0x20
+#define P3_HEIGHT_DOWN			0x15
+#define P3_HEIGHT_UP			  0x16
 
 uint8_t flags;
 extern struct msg_telemetry_template msg_teleTX;

@@ -164,6 +164,12 @@ void kb_input(uint8_t input_key){
         case 'l':
             p_adjust = P2_ROLL_PITCH_DOWN;
             break;
+        case '-':
+            p_adjust = P3_HEIGHT_DOWN;
+            break;
+        case '=':
+            p_adjust = P3_HEIGHT_UP;
+            break;
         default:
         	//return;
         	break;
