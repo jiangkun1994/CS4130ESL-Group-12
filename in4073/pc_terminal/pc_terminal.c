@@ -124,11 +124,11 @@ int main(int argc, char **argv)
         	//printf("c: %c\n", c);
         	next_c = term_getchar_nb();
         	if(next_c == '['){
-        		printf("Arrow\n");
+        		//printf("Arrow\n");
         		kb_input(term_getchar_nb());
         	}
         	else {
-        		printf("Not arrow\n");
+        		//printf("Not arrow\n");
         		kb_input(c);
         	}
 				}

@@ -649,7 +649,6 @@ void initialize()
 	battery = true;
 	connection = true;
 
-	counter = 0;
 	p = 1;
 	p1 = 1;
 	p2 = 1;

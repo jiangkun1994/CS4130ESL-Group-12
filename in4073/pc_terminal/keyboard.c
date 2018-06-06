@@ -122,25 +122,25 @@ void kb_input(uint8_t input_key){
           printf("CONNECTION FAILURE TESTING\n");
           connection_failure_flag = 1;
           break;
-		case 'A': // VK_LEFT: // roll (roll, keyboard: left/right arrows, joystick: handle left/right (x))
+		case 'D': // VK_LEFT: // roll (roll, keyboard: left/right arrows, joystick: handle left/right (x))
         	if(kb_roll_offset!=63)
         	{
             	kb_roll_offset+=1;
         	}
         	break;
-		case 'W': // VK_UP: // pitch (pitch, keyboard: up/down arrows, joystick: handle forward/backward (y))
+		case 'A': // VK_UP: // pitch (pitch, keyboard: up/down arrows, joystick: handle forward/backward (y))
         	if(kb_pitch_offset!=-63)
         	{
             	kb_pitch_offset-=1;
         	}
         	break;
-		case 'D': // VK_RIGHT:
+		case 'C': // VK_RIGHT:
         	if(kb_roll_offset!=-63)
         	{
             	kb_roll_offset-=1;
         	}
         	break;
-		case 'S': // VK_DOWN:
+		case 'B': // VK_DOWN:
 		    if(kb_pitch_offset!=63)
         	{
             	kb_pitch_offset+=1;
