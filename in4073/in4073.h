@@ -120,4 +120,11 @@ volatile bool radio_active;
 void ble_init(void);
 void ble_send(void);
 
+// Testing
+bool write_mission_data(void);
+bool read_mission_data(void);
+bool delete_mission_data(void);
+void update_telemetry_data(void);
+
+
 #endif // IN4073_H__

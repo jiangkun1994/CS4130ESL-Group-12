@@ -29,6 +29,12 @@ uint8_t p_adjust = 0;
 uint8_t connection_failure_flag = 0;
 bool read_joystick = true;
 
+#define BAT_THRESHOLD   600
+#define BAT_WARNING			801
+
+void print_transmission_data(struct msg_telemetry_template *msg_teleRX);
+void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX);
+
 /* print the input data from kb and js */
 void print_input_kb_js(){
 	printf("Control from joystick and keyboard: mode=%d, js_lift=%d, kb_lift_offset=%d, js_yaw=%d, kb_yaw_offset=%d, js_pitch=%d, kb_pitch_offset=%d, js_roll=%d, kb_roll_offset=%d",
@@ -43,6 +49,37 @@ void tx_packet(uint8_t *packet){
        	i++;
  }
 }
+
+// Argument types?
+void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX)
+{
+	printf("Writing to file\n");
+	FILE *f = fopen("filename.csv", "a");
+	if (f == NULL)
+	{
+    printf("Error opening file!\n");
+    exit(1);
+	}
+		fprintf(f, "%d,", msg_teleRX->Time_stamp);
+		fprintf(f, "%d,%d,%d,%d,%d,", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
+		fprintf(f, "%d,%d,%d,%d,", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
+		fprintf(f, "%d,%d,%d,",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
+		fprintf(f, "%d,%d,%d,",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
+		fprintf(f, "%d,%d,%d,%d,%d,",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
+		fprintf(f, "%d,%d,%d,%d\n",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
+
+		fclose(f);
+}
+
+void print_transmission_data(struct msg_telemetry_template *msg_teleRX)
+{
+	printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
+	printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
+	printf("%6d %6d %6d| ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
+	printf("%6d %6d %6d| ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
+	printf("%6d %6d %6d %d %d| ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
+	printf("%4d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
+}
 /*----------------------------------------------------------------
  * main -- execute terminal
  *----------------------------------------------------------------
@@ -50,10 +87,12 @@ void tx_packet(uint8_t *packet){
 int main(int argc, char **argv)
 {
 	int8_t c;
+	int8_t next_c;
 	uint8_t packet_from_pc[MAX_PAYLOAD];
 	struct packet rx;
 	struct msg_pc_template msg_pcTX = {0};;
 	struct msg_telemetry_template *msg_teleRX;
+	struct msg_telemetry_template *msg_logRX;
 	rx.status = INIT;
 
 	term_puts("\nTerminal program - Embedded Real-Time Systems\n");
@@ -77,10 +116,22 @@ int main(int argc, char **argv)
 				if (read_joystick)
         	read_js(fd);
 
-        while ((c = term_getchar_nb()) != -1){
-        	kb_input(c);
+        // while ((c = term_getchar_nb()) != -1){
+        	// kb_input(c);
         	//print_input_kb_js();
-        }
+        // }
+				while ((c = term_getchar_nb()) != -1){
+        	//printf("c: %c\n", c);
+        	next_c = term_getchar_nb();
+        	if(next_c == '['){
+        		printf("Arrow\n");
+        		kb_input(term_getchar_nb());
+        	}
+        	else {
+        		printf("Not arrow\n");
+        		kb_input(c);
+        	}
+				}
 
         current_time = mon_time_ms();
         if(((current_time - old_time) > 10) && (connection_failure_flag == 0)){
@@ -127,16 +178,33 @@ int main(int argc, char **argv)
 							case PACKET_TELEMETRY:
 								msg_teleRX = (struct msg_telemetry_template *)&rx.data[0];
 
-								printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
-								printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
-								printf("%6d %6d %6d| ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
-								printf("%6d %6d %6d| ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
-								printf("%6d %6d %6d %d %d| ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
-								printf("%4d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
+								if(msg_teleRX->bat_volt < BAT_THRESHOLD)
+								{
+									printf("Battery voltage below threshold, entering panic mode\n");
+								}
+								else if(msg_teleRX->bat_volt < BAT_WARNING)
+								{
+									printf("Warning. Low battery.\n");
+								}
+
+								print_transmission_data(msg_teleRX);
+
+								// printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
+								// printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
+								// printf("%6d %6d %6d| ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
+								// printf("%6d %6d %6d| ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
+								// printf("%6d %6d %6d %d %d| ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
+								// printf("%4d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
 								break;
+						case PACKET_LOG:
+							printf("Log received\n" );
+							msg_logRX = (struct msg_telemetry_template *)&rx.data[0];
+							//print_transmission_data(msg_logRX);
+							write_log_to_file("filename.txt", msg_logRX);
+							break;
 						default:
-								printf("UNDEFINED PACKET RECIEVED\n");
-								break;
+							printf("UNDEFINED PACKET RECIEVED\n");
+							break;
 						}
 						flags &= ~FLAG_1;
 					}
