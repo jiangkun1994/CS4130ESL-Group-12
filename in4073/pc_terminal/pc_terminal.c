@@ -30,7 +30,7 @@ uint8_t connection_failure_flag = 0;
 bool read_joystick = true;
 
 #define BAT_THRESHOLD   600
-#define BAT_WARNING			801
+#define BAT_WARNING			600
 
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX);
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX);
