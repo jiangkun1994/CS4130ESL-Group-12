@@ -202,6 +202,21 @@ void update_actions_full_control()
 	}
 }
 
+void update_actions_height_control()
+{
+	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
+	{
+		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 12;
+		pitch_moment = cur_pitch << 12;
+		yaw_moment = cur_yaw << 13;
+		old_lift = cur_lift;
+		old_roll = cur_roll;
+		old_pitch = cur_pitch;
+		old_yaw = cur_yaw;
+	}
+}
+
 void manual_mode()
 {
 	cur_mode = MANUAL_MODE;
@@ -463,6 +478,63 @@ void full_control_mode()
 
 	//if there is a new command do the calculations
 	update_actions_full_control();
+}
+
+void height_control_mode()
+{
+	cur_mode = HEIGHT_CONTROL_MODE;
+
+	//indicate that you are in height control mode
+	nrf_gpio_pin_write(RED,0);
+	nrf_gpio_pin_write(YELLOW,1);
+	nrf_gpio_pin_write(GREEN,0);
+
+	//check_connection();
+	if(check_sensor_int_flag())
+	{
+		read_baro();
+		calculate_rpm(p3 * (lift_force - pressure), roll_moment, pitch_moment, yaw_moment); // Not sure that whether the sr should multiply a constant or not
+	}
+
+	handle_transmission_data();
+
+	switch (pc_packet.data[0])
+	{
+		case PANIC_MODE:
+			p3 = 1;
+			statefunc = PANIC_MODE;
+			break;
+		case HEIGHT_CONTROL_MODE:
+			cur_lift = pc_packet.data[1];
+			cur_pitch = pc_packet.data[2];
+			cur_roll = pc_packet.data[3];
+			cur_yaw = pc_packet.data[4];
+			if(pc_packet.p_adjust == P3_HEIGHT_UP)
+			{
+				p3 += 1;
+				if(p3 >= 127)
+				{
+					p3 = 127;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			else if(pc_packet.p_adjust == P3_HEIGHT_DOWN)
+			{
+				p3 -= 1;
+				if(p3 <= 0)
+				{
+					p3 = 0;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			break;
+		default:
+			//printf("Not a valid mode\n");
+			break;
+	}
+
+	//if there is a new command do the calculations
+	update_actions_height_control();
 }
 
 //panic mode state makis

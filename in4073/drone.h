@@ -26,6 +26,7 @@ char cur_mode;
 unsigned char p;
 unsigned char p1;
 unsigned char p2;
+unsigned char p3;
 
 //variable to hold current movement
 int8_t cur_lift;

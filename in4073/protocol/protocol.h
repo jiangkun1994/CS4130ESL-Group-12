@@ -50,7 +50,7 @@
 #define CALIBRATION_MODE		0x03
 #define YAW_CONTROL_MODE		0x04
 #define FULL_CONTROL_MODE		0x05
-#define IDLE_MODE						0x10
+#define HEIGHT_CONTROL_MODE		0x07
 
 #define P_YAW_UP 						0x01
 #define P_YAW_DOWN					0x02
