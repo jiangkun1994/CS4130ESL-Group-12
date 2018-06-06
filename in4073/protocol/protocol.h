@@ -17,6 +17,7 @@
 #define PACKET_GENERAL		10
 #define PACKET_ACK			  11
 #define PACKET_TELEMETRY	12
+#define PACKET_LOG				13
 
 /* the length for each type of packet */
 //#define LENGTH_GENERAL		5
@@ -104,13 +105,13 @@ struct msg_telemetry_template{
  	int8_t yaw;
  	int16_t engine[4];
  	int16_t phi, theta, psi;
-  	int16_t sp, sq, sr;
-  	int16_t sax, say, saz;
-  	uint16_t bat_volt;
-  	uint8_t P;
-  	uint8_t P1;
-  	uint8_t P2;
-  	int32_t pressure;
+  int16_t sp, sq, sr;
+  int16_t sax, say, saz;
+  uint16_t bat_volt;
+  uint8_t P;
+  uint8_t P1;
+  uint8_t P2;
+  int32_t pressure;
 	int32_t temperature;
 	uint32_t Time_stamp;
 }__attribute__((packed));

@@ -16,7 +16,7 @@
 #include "in4073.h"
 
 #define BAT_THRESHOLD   500
-#define BAT_WARNING		501
+//#define BAT_WARNING			501
 
 uint8_t telemetry_packet[MAX_PAYLOAD];
 struct msg_telemetry_template msg_teleTX = {0};
@@ -24,7 +24,7 @@ static struct packet rx = {0};
 struct msg_pc_template *msg_pcRX;
 uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
-uint16_t sample = 0;
+uint8_t calibration_flag;
 
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
@@ -42,6 +42,42 @@ void send_ack(uint8_t *data)
 	}
 }
 
+void update_telemetry_data(void)
+{
+	msg_teleTX.mode = cur_mode;
+	msg_teleTX.lift = cur_lift;
+	msg_teleTX.roll = cur_roll;
+	msg_teleTX.pitch = cur_pitch;
+	msg_teleTX.yaw = cur_yaw;
+
+	msg_teleTX.engine[0] = ae[0];
+	msg_teleTX.engine[1] = ae[1];
+	msg_teleTX.engine[2] = ae[2];
+	msg_teleTX.engine[3] = ae[3];
+
+	msg_teleTX.phi = phi; // roll angle
+	msg_teleTX.theta = theta; // pitch angle
+	msg_teleTX.psi = psi; // yaw angle
+
+	msg_teleTX.sp = sp; // roll angular rate
+	msg_teleTX.sq = sq; // pitch angular rate
+	msg_teleTX.sr = sr; // yaw angular rate
+
+	msg_teleTX.sax = sax; // x direction velocity
+	msg_teleTX.say = say; // y direction velocity
+	msg_teleTX.saz = saz; // z direction velocity
+
+	msg_teleTX.bat_volt = bat_volt;
+
+	msg_teleTX.P = p;
+	msg_teleTX.P1 = p1;
+	msg_teleTX.P2 = p2;
+	msg_teleTX.pressure = pressure;
+	msg_teleTX.temperature = temperature;
+
+	msg_teleTX.Time_stamp = get_time_us();
+}
+
 /*----------------------------------------------------------------------
  * send_telemetry -- send the data read from sensors from drone to pc
  *----------------------------------------------------------------------
@@ -50,36 +86,7 @@ void send_telemetry()
 {
 	if (check_telemetry_timer_flag())
 	{
-		msg_teleTX.mode = cur_mode;
-		msg_teleTX.lift = cur_lift;
-		msg_teleTX.roll = cur_roll;
-		msg_teleTX.pitch = cur_pitch;
-		msg_teleTX.yaw = cur_yaw;
-
-		msg_teleTX.engine[0] = ae[0];
-		msg_teleTX.engine[1] = ae[1];
-		msg_teleTX.engine[2] = ae[2];
-		msg_teleTX.engine[3] = ae[3];
-
-		msg_teleTX.phi = phi; // roll angle
-		msg_teleTX.theta = theta; // pitch angle
-		msg_teleTX.psi = psi; // yaw angle
-
-		msg_teleTX.sp = sp; // roll angular rate
-		msg_teleTX.sq = sq; // pitch angular rate
-		msg_teleTX.sr = sr; // yaw angular rate
-
-		msg_teleTX.sax = sax; // x direction velocity
-		msg_teleTX.say = say; // y direction velocity
-		msg_teleTX.saz = saz; // z direction velocity
-
-		msg_teleTX.bat_volt = bat_volt;
-
-		msg_teleTX.P = p;
-		msg_teleTX.P1 = p1;
-		msg_teleTX.P2 = p2;
-		msg_teleTX.pressure = pressure;
-		msg_teleTX.temperature = temperature;
+		update_telemetry_data();
 
 		create_packet(sizeof(struct msg_telemetry_template), PACKET_TELEMETRY, (uint8_t *) &msg_teleTX, telemetry_packet);
 
@@ -254,10 +261,10 @@ void manual_mode()
 	// }
 }
 
-
 /* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
 void calibration_mode() // what is the advice from TA about calibration mode? Some initial values from DMP are not right?
 {
+	static uint16_t sample = 0;
 	cur_mode = CALIBRATION_MODE;
 
 	sp_off = 0;
@@ -299,10 +306,10 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 		printf("CALIBRATION MODE FINISHED! \n");
 		statefunc = SAFE_MODE;
+		calibration_flag = true;
 		sample = 0;
 	}
 }
-
 
 void yaw_control_mode() // also need calibration mode to read sr_off
 {
@@ -374,9 +381,9 @@ void full_control_mode()
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, 
-			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off), 
-			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off), 
+		calculate_rpm(lift_force,
+			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
+			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
 			p * (yaw_moment - (sr - sr_off)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
@@ -516,6 +523,7 @@ void panic_mode()
 			//enters safe mode
 			statefunc = SAFE_MODE;
 			panic_loops = 0;
+			read_mission_data();
 		}
 		clear_panic_mode_timer_flag();
 	}
@@ -570,14 +578,16 @@ void safe_mode()
 				statefunc = CALIBRATION_MODE;
 				break;
 			case YAW_CONTROL_MODE:
-				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
+			//printf("Calibration_flag %d\n", calibration_flag);
+				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0 /*&& calibration_flag*/)
 				{
 					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",YAW_CONTROL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
 					statefunc = YAW_CONTROL_MODE;
 				}
 				break;
 			case FULL_CONTROL_MODE:
-				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
+			//printf("Calibration_flag %d\n", calibration_flag);
+				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0 /*&& calibration_flag*/)
 				{
 					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
 					statefunc = FULL_CONTROL_MODE;
@@ -638,9 +648,14 @@ void initialize()
 	ae[3] = 0;
 	battery = true;
 	connection = true;
+
+	counter = 0;
 	p = 1;
 	p1 = 1;
 	p2 = 1;
+
+	calibration_flag = false;
+
 	// p_ctrl=10;
 	//first get to safe mode
 	statefunc = SAFE_MODE;;
@@ -657,19 +672,14 @@ void check_battery()
 
 		if ((bat_volt < BAT_THRESHOLD) && battery)
 		{
-			printf("bat voltage %d below threshold %d\n",bat_volt,BAT_THRESHOLD);
 			battery = false;
-			statefunc = PANIC_MODE;
-			//set_mode(PANIC_MODE);
-		}
-		else if(bat_volt < BAT_WARNING)
-		{
-			printf("Battery warning, battery %d\n", bat_volt);
+			if(statefunc != SAFE_MODE){
+				statefunc = PANIC_MODE;
+			}
 		}
 		else if ((bat_volt > BAT_THRESHOLD) && !battery)
 		{
 			battery = true;
-			printf("Battery true %d\n", bat_volt);
 		}
 		clear_timer_flag();
 	}
@@ -709,6 +719,17 @@ void run_modes()
 int main(void){
 
 	initialize();
+
+	msg_teleTX.mode = 8;
+	msg_teleTX.bat_volt = 42;
+	write_mission_data();
+	msg_teleTX.mode = 3;
+	msg_teleTX.bat_volt = 43;
+	write_mission_data();
+	//read_mission_data();
+	//read_mission_data();
+
+	nrf_delay_ms(2);
 
 	while (!demo_done){
 
