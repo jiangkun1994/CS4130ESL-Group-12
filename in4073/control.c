@@ -12,8 +12,8 @@
 
 #include "in4073.h"
 
-#define MIN_RPM 184320 // 180 RPM
-#define MAX_RPM 460800 // 450 RPM
+#define MIN_RPM 204800 // 200 RPM
+#define MAX_RPM 614400 // 600 RPM
 
 void update_motors(void)
 {
@@ -37,10 +37,10 @@ void run_filters_and_control()
 }
 
 //in this function calculate the values for the ae[] array makis
-void calculate_rpm(int Z, int L, int M, int N)
+void calculate_rpm(int32_t Z, int32_t L, int32_t M, int32_t N)
 {
 	// Z = lift
-	// L = row
+	// L = roll
 	// M = pitch
 	// N = yaw
 	int ae1[4],i;
@@ -63,6 +63,7 @@ void calculate_rpm(int Z, int L, int M, int N)
 		ae1[1] = Z - L + N;
 		ae1[2] = Z - M - N;
 		ae1[3] = Z + L + N;
+
 		//printf("z:%d \t l:%d \t m:%d \t n:%d\n", Z, L, M, N);
 
 		//minimum rpm
@@ -87,6 +88,7 @@ void calculate_rpm(int Z, int L, int M, int N)
 		ae[1]=ae1[1] >> 10;
 		ae[2]=ae1[2] >> 10;
 		ae[3]=ae1[3] >> 10;
+
 	}
 	//if there is no lift force everything should be shut down
 	else if(Z<=0)

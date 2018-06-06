@@ -29,8 +29,8 @@ uint8_t p_adjust = 0;
 uint8_t connection_failure_flag = 0;
 bool read_joystick = true;
 
-#define BAT_THRESHOLD   600
-#define BAT_WARNING			600
+#define BAT_THRESHOLD   500
+#define BAT_WARNING		501
 
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX);
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX);
@@ -78,7 +78,7 @@ void print_transmission_data(struct msg_telemetry_template *msg_teleRX)
 	printf("%6d %6d %6d| ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
 	printf("%6d %6d %6d| ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
 	printf("%6d %6d %6d %d %d| ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
-	printf("%4d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
+	printf("%4d %2d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2, msg_teleRX->P3);
 }
 /*----------------------------------------------------------------
  * main -- execute terminal

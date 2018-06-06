@@ -15,7 +15,7 @@
 
 #include "in4073.h"
 
-#define BAT_THRESHOLD   500
+//#define BAT_THRESHOLD   500
 //#define BAT_WARNING			501
 
 uint8_t telemetry_packet[MAX_PAYLOAD];
@@ -24,7 +24,7 @@ static struct packet rx = {0};
 struct msg_pc_template *msg_pcRX;
 uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
-uint8_t calibration_flag;
+//uint8_t calibration_flag;
 
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
@@ -72,6 +72,7 @@ void update_telemetry_data(void)
 	msg_teleTX.P = p;
 	msg_teleTX.P1 = p1;
 	msg_teleTX.P2 = p2;
+	msg_teleTX.P3 = p3;
 	msg_teleTX.pressure = pressure;
 	msg_teleTX.temperature = temperature;
 
@@ -162,9 +163,9 @@ void update_actions_manual_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 12;
-		pitch_moment = cur_pitch << 12;
-		yaw_moment = cur_yaw << 13;
+		roll_moment = cur_roll << 10;
+		pitch_moment = cur_pitch << 10;
+		yaw_moment = cur_yaw << 11;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -177,9 +178,9 @@ void update_actions_yaw_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 12;
-		pitch_moment = cur_pitch << 12;
-		yaw_moment = cur_yaw << 6;
+		roll_moment = cur_roll << 11;
+		pitch_moment = cur_pitch << 11;
+		yaw_moment = cur_yaw << 8;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -192,9 +193,9 @@ void update_actions_full_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 12;
-		pitch_moment = cur_pitch << 12;
-		yaw_moment = cur_yaw << 6;
+		roll_moment = cur_roll << 11;
+		pitch_moment = cur_pitch << 11;
+		yaw_moment = cur_yaw << 8;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -321,7 +322,7 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 		printf("CALIBRATION MODE FINISHED! \n");
 		statefunc = SAFE_MODE;
-		calibration_flag = true;
+		//calibration_flag = true;
 		sample = 0;
 	}
 }
@@ -340,7 +341,7 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment - (sr - sr_off))); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 3))); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
@@ -399,7 +400,7 @@ void full_control_mode()
 		calculate_rpm(lift_force,
 			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
 			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
-			p * (yaw_moment - (sr - sr_off)));
+			p * (yaw_moment + ((sr - sr_off) << 3)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
@@ -595,7 +596,7 @@ void panic_mode()
 			//enters safe mode
 			statefunc = SAFE_MODE;
 			panic_loops = 0;
-			read_mission_data();
+			//read_mission_data();
 		}
 		clear_panic_mode_timer_flag();
 	}
@@ -665,6 +666,14 @@ void safe_mode()
 					statefunc = FULL_CONTROL_MODE;
 				}
 				break;
+			case HEIGHT_CONTROL_MODE:
+			//printf("Calibration_flag %d\n", calibration_flag);
+				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0 /*&& calibration_flag*/)
+				{
+					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
+					statefunc = HEIGHT_CONTROL_MODE;
+				}
+				break;
 			default:
 				//printf("Not a valid mode - DATA[0]=%d\n", pc_packet.data[0]);
 				break;
@@ -724,8 +733,9 @@ void initialize()
 	p = 1;
 	p1 = 1;
 	p2 = 1;
+	p3 = 1;
 
-	calibration_flag = false;
+	//calibration_flag = false;
 
 	// p_ctrl=10;
 	//first get to safe mode
@@ -781,6 +791,9 @@ void run_modes()
 		case FULL_CONTROL_MODE:
 			full_control_mode();
 			break;
+		case HEIGHT_CONTROL_MODE:
+			height_control_mode();
+			break;
 		default:
 			panic_mode();
 			break;
@@ -795,16 +808,16 @@ int main(void){
 
 	initialize();
 
-	msg_teleTX.mode = 8;
-	msg_teleTX.bat_volt = 42;
-	write_mission_data();
-	msg_teleTX.mode = 3;
-	msg_teleTX.bat_volt = 43;
-	write_mission_data();
+	// msg_teleTX.mode = 8;
+	// msg_teleTX.bat_volt = 42;
+	// write_mission_data();
+	// msg_teleTX.mode = 3;
+	// msg_teleTX.bat_volt = 43;
+	// write_mission_data();
 	//read_mission_data();
 	//read_mission_data();
 
-	nrf_delay_ms(2);
+	//nrf_delay_ms(2);
 
 	while (!demo_done){
 
@@ -812,10 +825,6 @@ int main(void){
 
 		//get to the state
 		//(*statefunc)();
-		if(check_sensor_int_flag())
-		{
-			read_baro();
-		}
 		run_modes();
 
 		send_telemetry();

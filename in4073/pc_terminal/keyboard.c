@@ -83,6 +83,16 @@ void kb_input(uint8_t input_key){
             else
                 printf("The control data from kb and js are not zero!! Please press button c and check js\n");
             break;
+        case SEVEN:
+            if (
+                inspect_overflow_1ift(kb_lift_offset, js_lift) == 0 &&
+                inspect_overflow(kb_pitch_offset, js_pitch) == 0 &&
+                inspect_overflow(kb_roll_offset, js_roll) == 0 &&
+                inspect_overflow(kb_yaw_offset, js_yaw) == 0)
+                mode = HEIGHT_CONTROL_MODE;
+            else
+                printf("The control data from kb and js are not zero!! Please press button c and check js\n");
+            break;
 		case ESC:
 			mode = PANIC_MODE;
 			break;

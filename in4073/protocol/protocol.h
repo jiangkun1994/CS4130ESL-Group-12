@@ -113,6 +113,7 @@ struct msg_telemetry_template{
   uint8_t P;
   uint8_t P1;
   uint8_t P2;
+  uint8_t P3;
   int32_t pressure;
 	int32_t temperature;
 	uint32_t Time_stamp;
