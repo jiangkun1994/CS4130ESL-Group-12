@@ -776,17 +776,17 @@ void run_modes()
 		case SAFE_MODE:
 			safe_mode();
 			break;
-		case MANUAL_MODE:
-			manual_mode();
-			break;
 		case PANIC_MODE:
 			panic_mode();
 			break;
-		case YAW_CONTROL_MODE:
-			yaw_control_mode();
+		case MANUAL_MODE:
+			manual_mode();
 			break;
 		case CALIBRATION_MODE:
 			calibration_mode();
+			break;
+		case YAW_CONTROL_MODE:
+			yaw_control_mode();
 			break;
 		case FULL_CONTROL_MODE:
 			full_control_mode();
