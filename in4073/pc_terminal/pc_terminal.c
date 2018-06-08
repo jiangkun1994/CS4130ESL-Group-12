@@ -53,7 +53,7 @@ void tx_packet(uint8_t *packet){
 // Argument types?
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX)
 {
-	printf("Writing to file\n");
+	//printf("Writing to file\n");
 	FILE *f = fopen("filename.csv", "a");
 	if (f == NULL)
 	{
