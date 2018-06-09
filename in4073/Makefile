@@ -44,6 +44,7 @@ $(abspath ./protocol/protocol.c) \
 $(abspath ./control.c) \
 $(abspath ./logging.c) \
 $(abspath ./fixedpoint.c) \
+$(abspath ./filter.c) \
 $(abspath ./drivers/gpio.c) \
 $(abspath ./drivers/timers.c) \
 $(abspath ./drivers/uart.c) \
