@@ -17,7 +17,7 @@ void butterworth()
 	int i = 0;
 	x[0][0] = _16to32(sp);
 	x[1][0] = _16to32(sq);
-	x[2][3] = _16to32(sr);
+	x[2][0] = _16to32(sr);
 	x[3][0] = _16to32(sax);
 	x[4][0] = _16to32(say);
 	x[5][0] = _16to32(saz);
