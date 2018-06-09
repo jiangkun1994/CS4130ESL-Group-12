@@ -665,7 +665,7 @@ void panic_mode()
 			//enters safe mode
 			statefunc = SAFE_MODE;
 			panic_loops = 0;
-			read_mission_data();
+			//read_mission_data();
 		}
 		clear_panic_mode_timer_flag();
 	}
@@ -884,16 +884,16 @@ int main(void){
 
 	initialize();
 
-	msg_teleTX.mode = 8;
-	msg_teleTX.bat_volt = 42;
-	write_mission_data();
-	msg_teleTX.mode = 3;
-	msg_teleTX.bat_volt = 43;
-	write_mission_data();
-	read_mission_data();
-	read_mission_data();
+	// msg_teleTX.mode = 8;
+	// msg_teleTX.bat_volt = 42;
+	// write_mission_data();
+	// msg_teleTX.mode = 3;
+	// msg_teleTX.bat_volt = 43;
+	// write_mission_data();
+	// read_mission_data();
+	// read_mission_data();
 
-	nrf_delay_ms(2);
+	// nrf_delay_ms(2);
 
 	while (!demo_done){
 
