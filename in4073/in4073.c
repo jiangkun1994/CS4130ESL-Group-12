@@ -24,6 +24,7 @@ static struct packet rx = {0};
 struct msg_pc_template *msg_pcRX;
 uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
+extern bool raw_mode_flag;
 //uint8_t calibration_flag;
 
 /*------------------------------------------------------------------
@@ -298,11 +299,12 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 
 	if(check_sensor_int_flag())
 	{
-		get_dmp_data();
-		//printf("SAMPLE number:%d\n", sample);
+		if(raw_mode_flag == true)
+		{
+			get_raw_sensor_data();
+			butterworth();
+			kalman();
 
-		// Need to check if data from DMP are junk data
-		if (CHECK_RANGE(sp, sq, sr, 5)){
 			sp_off = sp_off + sp;
 			sq_off = sq_off + sq;
 			sr_off = sr_off + sr;
@@ -310,6 +312,31 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 			theta_off = theta_off + theta;
 			sample++;
 		}
+		else
+		{
+			get_dmp_data();
+
+			if (CHECK_RANGE(sp, sq, sr, 5))
+			{
+				sp_off = sp_off + sp;
+				sq_off = sq_off + sq;
+				sr_off = sr_off + sr;
+				phi_off = phi_off + phi;
+				theta_off = theta_off + theta;
+				sample++;
+			}
+		}
+		//printf("SAMPLE number:%d\n", sample);
+
+		// Need to check if data from DMP are junk data
+		// if (CHECK_RANGE(sp, sq, sr, 5)){
+		// 	sp_off = sp_off + sp;
+		// 	sq_off = sq_off + sq;
+		// 	sr_off = sr_off + sr;
+		// 	phi_off = phi_off + phi;
+		// 	theta_off = theta_off + theta;
+		// 	sample++;
+		// }
 	}
 
 	if (sample >= 150){
@@ -341,7 +368,7 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 3))); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + (sr << 3))); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
@@ -396,11 +423,29 @@ void full_control_mode()
 
 	if(check_sensor_int_flag())
 	{
-		get_dmp_data();
-		calculate_rpm(lift_force,
-			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
-			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
-			p * (yaw_moment + ((sr - sr_off) << 3)));
+		if(raw_mode_flag == true)
+		{
+			get_raw_sensor_data();
+			butterworth();
+			kalman();
+			calculate_rpm(lift_force,
+				p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
+				p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
+				p * (yaw_moment + ((sr - sr_off) << 3)));
+		}
+		else
+		{
+			get_dmp_data();
+			calculate_rpm(lift_force,
+				p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
+				p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
+				p * (yaw_moment + ((sr - sr_off) << 3)));
+		}
+		// get_dmp_data();
+		// calculate_rpm(lift_force,
+		// 	p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
+		// 	p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
+		// 	p * (yaw_moment + ((sr - sr_off) << 3)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
@@ -479,6 +524,30 @@ void full_control_mode()
 
 	//if there is a new command do the calculations
 	update_actions_full_control();
+}
+
+void raw_mode()
+{
+	cur_mode = RAW_MODE;
+
+	//indicate that you are in raw mode
+	nrf_gpio_pin_write(RED,0);
+	nrf_gpio_pin_write(YELLOW,1);
+	nrf_gpio_pin_write(GREEN,0);
+
+	if(raw_mode_flag == false)
+	{
+		raw_mode_flag = true;
+		printf("RAW MODE STARTS!\n");
+	}
+	else
+	{
+		raw_mode_flag = false;
+		printf("NOT RAW MODE NOW!\n");
+	}
+
+	statefunc = CALIBRATION_MODE;
+
 }
 
 void height_control_mode()
@@ -666,6 +735,9 @@ void safe_mode()
 					statefunc = FULL_CONTROL_MODE;
 				}
 				break;
+			case RAW_MODE:
+				statefunc = RAW_MODE;
+				break;
 			case HEIGHT_CONTROL_MODE:
 			//printf("Calibration_flag %d\n", calibration_flag);
 				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0 /*&& calibration_flag*/)
@@ -698,6 +770,7 @@ void initialize()
 	adc_request_sample();
 	//ble_init();
 	demo_done = false;
+	raw_mode_flag = false;
 	//battery = true;
 	//adc_request_sample();
 
@@ -790,6 +863,9 @@ void run_modes()
 			break;
 		case FULL_CONTROL_MODE:
 			full_control_mode();
+			break;
+		case RAW_MODE:
+			raw_mode();
 			break;
 		case HEIGHT_CONTROL_MODE:
 			height_control_mode();

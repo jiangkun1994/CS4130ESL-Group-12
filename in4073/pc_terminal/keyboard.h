@@ -14,6 +14,7 @@
 #define THREE	0x33
 #define FOUR	0x34
 #define FIVE	0x35
+#define SIX		0x36
 #define SEVEN   0x37
 
 /* action on keyboard */

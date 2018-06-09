@@ -86,23 +86,6 @@ void js_give_packet(char action, char value){
 	}
 }
 
-// void set_js_packet(char action, int axis, int divisor){
-// 	float throttle = 0;
-// 	float amplifier = 127;
-// 	char give_value;
-//
-// 	throttle = (axis + (divisor / 2)) / divisor;
-//
-// 	if(throttle > 1000)
-// 		throttle = 1000;
-// 	else if(throttle < -1000)
-// 		throttle = -1000;
-//
-// 	give_value = throttle / 1000.0 * amplifier;
-// 	js_give_packet(action, give_value);
-//
-// }
-
 void set_js_packet(char action, int axis){
 	char give_value;
 	give_value = js_scale_values(axis);
@@ -196,6 +179,10 @@ int read_js(int fd)
 		mode = YAW_CONTROL_MODE;
 	if (button[5])
 		mode = FULL_CONTROL_MODE;
+	if (button[6])
+		mode = RAW_MODE;
+	if (button[7])
+		mode = HEIGHT_CONTROL_MODE;
 
 
 	/* the data from handler */

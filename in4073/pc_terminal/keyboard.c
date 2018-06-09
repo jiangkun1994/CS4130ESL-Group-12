@@ -83,6 +83,9 @@ void kb_input(uint8_t input_key){
             else
                 printf("The control data from kb and js are not zero!! Please press button c and check js\n");
             break;
+        case SIX:
+            mode = RAW_MODE;
+            break;
         case SEVEN:
             if (
                 inspect_overflow_1ift(kb_lift_offset, js_lift) == 0 &&
