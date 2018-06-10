@@ -610,8 +610,8 @@ void panic_mode()
 			//enters safe mode
 			statefunc = SAFE_MODE;
 			panic_loops = 0;
-			// read_mission_data();
-			// delete_mission_data();
+			read_mission_data();
+			delete_mission_data();
 		}
 		clear_panic_mode_timer_flag();
 	}
@@ -637,8 +637,8 @@ void safe_mode()
 		nrf_gpio_pin_write(GREEN,1);
 	}
 
-	read_mission_data();
-	delete_mission_data();
+	// read_mission_data();
+	// delete_mission_data();
 	
 	//motors are shut down
 	ae[0] = 0;
