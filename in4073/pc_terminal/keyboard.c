@@ -180,6 +180,12 @@ void kb_input(uint8_t input_key){
         case '=':
             p_adjust = P3_HEIGHT_UP;
             break;
+        case 'p':
+            if(logging == true)
+                logging == false;
+            else
+                logging = true;
+            break;
         default:
         	//return;
         	break;

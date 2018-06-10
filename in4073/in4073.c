@@ -127,6 +127,7 @@ void handle_transmission_data()
 					pc_packet.data[3] = msg_pcRX->roll;
 					pc_packet.data[4] = msg_pcRX->yaw;
 					pc_packet.p_adjust = msg_pcRX->P;
+					pc_packet.logging = msg_pcRX->LOGGING;
 					break;
 				default:
 					break;
@@ -232,6 +233,9 @@ void manual_mode()
 	//read the new messages to come
 	handle_transmission_data();
 	//printf("PK_manual|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
+	if(pc_packet.logging)
+		write_mission_data();
+
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
@@ -346,6 +350,9 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 
 	handle_transmission_data();
 
+	if(pc_packet.logging)
+		write_mission_data();
+
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
@@ -404,6 +411,10 @@ void full_control_mode()
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
+
+	if(pc_packet.logging)
+		write_mission_data();
+
 	switch(pc_packet.data[0])
 	{
 		case PANIC_MODE:
@@ -498,6 +509,9 @@ void height_control_mode()
 	}
 
 	handle_transmission_data();
+
+	if(pc_packet.logging)
+		write_mission_data();
 
 	switch (pc_packet.data[0])
 	{
@@ -596,7 +610,8 @@ void panic_mode()
 			//enters safe mode
 			statefunc = SAFE_MODE;
 			panic_loops = 0;
-			read_mission_data();
+			// read_mission_data();
+			// delete_mission_data();
 		}
 		clear_panic_mode_timer_flag();
 	}
@@ -622,6 +637,9 @@ void safe_mode()
 		nrf_gpio_pin_write(GREEN,1);
 	}
 
+	read_mission_data();
+	delete_mission_data();
+	
 	//motors are shut down
 	ae[0] = 0;
 	ae[1] = 0;
@@ -707,6 +725,7 @@ void initialize()
 	pc_packet.data[2] = 0; // pitch
 	pc_packet.data[3] = 0; // roll
 	pc_packet.data[4] = 0; // yaw
+	pc_packet.logging = false;
 	rx.status = INIT;
 
 	//initialise rest of the variables to safe values, just in case
@@ -808,16 +827,16 @@ int main(void){
 
 	initialize();
 
-	msg_teleTX.mode = 8;
-	msg_teleTX.bat_volt = 42;
-	write_mission_data();
-	msg_teleTX.mode = 3;
-	msg_teleTX.bat_volt = 43;
-	write_mission_data();
-	read_mission_data();
-	read_mission_data();
+	// msg_teleTX.mode = 8;
+	// msg_teleTX.bat_volt = 42;
+	// write_mission_data();
+	// msg_teleTX.mode = 3;
+	// msg_teleTX.bat_volt = 43;
+	// write_mission_data();
+	// read_mission_data();
+	// read_mission_data();
 
-	nrf_delay_ms(2);
+	// nrf_delay_ms(2);
 
 	while (!demo_done){
 

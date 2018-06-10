@@ -28,6 +28,7 @@ int fd = 0;
 uint8_t p_adjust = 0;
 uint8_t connection_failure_flag = 0;
 bool read_joystick = true;
+bool logging = false;
 
 #define BAT_THRESHOLD   500
 #define BAT_WARNING		501
@@ -139,8 +140,9 @@ int main(int argc, char **argv)
 					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, js_lift);
 					msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, js_roll);
 					msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, js_pitch);
-					msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, js_yaw);
-					msg_pcTX.P 			= p_adjust;
+					msg_pcTX.yaw 	= inspect_overflow(kb_yaw_offset, js_yaw);
+					msg_pcTX.P 		= p_adjust;
+					msg_pcTX.LOGGING = logging; 
 					p_adjust = 0;
 
 					create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
