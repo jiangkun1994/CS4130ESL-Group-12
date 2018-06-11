@@ -1,6 +1,8 @@
 #ifndef FIXED_H__
 #define FIXED_H__
 
+#include <inttypes.h>
+
 #define SIGN_BIT 0x80000000
 #define EXP_BIT  0x7f800000
 #define TAIL_BIT 0x007fffff

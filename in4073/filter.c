@@ -52,20 +52,20 @@ void kalman()
 
 	// say is sphi, which means when roll, the drone will be prone to move by y axis
 	sp_32 = sp_32 - p_b;
-	phi_32 = phi_32 + multiply(sp_32, flo2fix(P2PHI)) >> 14;
-	phi_32 = phi_32 - multiply((phi_32 - say_32), (1 >> 14)) >> 14;
-	p_b = p_b + multiply(multiply((phi_32 - say_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14;
+	phi_32 = phi_32 + (multiply(sp_32, flo2fix(P2PHI)) >> 14);
+	phi_32 = phi_32 - (multiply((phi_32 - say_32), (1 >> 14)) >> 14);
+	p_b = p_b + (multiply(multiply((phi_32 - say_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14);
 
 	// sax is stheta, which means when pitch, the drone will be prone to move by x axis
 	sq_32 = sq_32 - q_b;
-	theta_32 = theta_32 + multiply(sq_32, flo2fix(P2PHI)) >> 14;
-	theta_32 = theta_32 - multiply((theta_32 - sax_32), (1 >> 14)) >> 14;
-	q_b = q_b + multiply(multiply((theta_32 - sax_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14;
+	theta_32 = theta_32 + (multiply(sq_32, flo2fix(P2PHI)) >> 14);
+	theta_32 = theta_32 - (multiply((theta_32 - sax_32), (1 >> 14)) >> 14);
+	q_b = q_b + (multiply(multiply((theta_32 - sax_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14);
 
 	sr_32 = sr_32 - r_b;
-	psi_32 = psi_32 + multiply(sr_32, flo2fix(P2PHI)) >> 14;
-	psi_32 = psi_32 - multiply((psi_32 - saz_32), (1 >> 14)) >> 14;
-	r_b = r_b + multiply(multiply((psi_32 - saz_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14;
+	psi_32 = psi_32 + (multiply(sr_32, flo2fix(P2PHI)) >> 14);
+	psi_32 = psi_32 - (multiply((psi_32 - saz_32), (1 >> 14)) >> 14);
+	r_b = r_b + (multiply(multiply((psi_32 - saz_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14);
 
 	sp = _32to16(sp_32);
 	sq = _32to16(sq_32);

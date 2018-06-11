@@ -170,6 +170,11 @@ int main(int argc, char **argv)
 								{
 									if (rx.data[1] == CALIBRATION_MODE)
 										mode = SAFE_MODE;
+									else if (rx.data[1] == RAW_MODE)
+									{
+										mode = CALIBRATION_MODE;
+										printf("Ack received\n");
+									}
 									else
 										mode = rx.data[1];
 									//printf("MODE CHANGED CORRECTLY TO %d\n", rx.data[1]);

@@ -24,7 +24,7 @@ static struct packet rx = {0};
 struct msg_pc_template *msg_pcRX;
 uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
-extern bool raw_mode_flag;
+bool raw_mode_flag;
 //uint8_t calibration_flag;
 
 /*------------------------------------------------------------------
@@ -42,6 +42,15 @@ void send_ack(uint8_t *data)
 		i++;
 	}
 }
+
+void create_and_send_ack(uint8_t flags, uint8_t mode)
+{
+	uint8_t data[2];
+	data[0] = flags;
+	data[1] = mode;
+	send_ack(data);
+}
+
 
 void update_telemetry_data(void)
 {
@@ -149,7 +158,7 @@ void check_connection()
 		uint32_t time_diff;
 		cur_time_us = get_time_us();
 		time_diff = cur_time_us - time_latest_packet_us;
-		if((time_diff > 600000) && cur_mode != SAFE_MODE)
+		if((time_diff > 600000) && cur_mode != SAFE_MODE && cur_mode != RAW_MODE)
 		{
 			connection = false;
 			statefunc = PANIC_MODE;
@@ -311,11 +320,12 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 			phi_off = phi_off + phi;
 			theta_off = theta_off + theta;
 			sample++;
+			printf("sample raw: %d\n", sample);
 		}
 		else
 		{
 			get_dmp_data();
-
+			printf("dmp\n");
 			if (CHECK_RANGE(sp, sq, sr, 5))
 			{
 				sp_off = sp_off + sp;
@@ -324,6 +334,7 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 				phi_off = phi_off + phi;
 				theta_off = theta_off + theta;
 				sample++;
+				printf("sample dmp: %d\n", sample);
 			}
 		}
 		//printf("SAMPLE number:%d\n", sample);
@@ -364,12 +375,27 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	nrf_gpio_pin_write(GREEN,0);
 
 
-	//check_connection();
 	if(check_sensor_int_flag())
 	{
-		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + (sr << 3))); // Not sure that whether the sr should multiply a constant or not
+		if(raw_mode_flag == true)
+		{
+			get_raw_sensor_data();
+			butterworth();
+			kalman();
+			calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + (sr << 3)));
+		}
+		else
+		{
+			get_dmp_data();
+			calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + (sr << 3)));
+		}
 	}
+
+	// if(check_sensor_int_flag())
+	// {
+	// 	get_dmp_data();
+	// 	calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + (sr << 3))); // Not sure that whether the sr should multiply a constant or not
+	// }
 
 	handle_transmission_data();
 
@@ -535,14 +561,22 @@ void raw_mode()
 	nrf_gpio_pin_write(YELLOW,1);
 	nrf_gpio_pin_write(GREEN,0);
 
+	pc_packet.data[0] = msg_pcRX->mode;
+	uint8_t data[2];
+	data[0] = flags;
+	data[1] = pc_packet.data[0];
+	send_ack(data);
+
 	if(raw_mode_flag == false)
 	{
 		raw_mode_flag = true;
+		imu_init(false, 256);
 		printf("RAW MODE STARTS!\n");
 	}
 	else
 	{
 		raw_mode_flag = false;
+		imu_init(true, 100);
 		printf("NOT RAW MODE NOW!\n");
 	}
 

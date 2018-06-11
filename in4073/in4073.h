@@ -22,6 +22,7 @@
 #include "protocol/protocol.h"
 #include <math.h>
 #include "drone.h"
+#include "filter.h"
 
 #define RED				22
 #define YELLOW		24
