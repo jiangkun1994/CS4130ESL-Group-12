@@ -1,3 +1,4 @@
 /in4073/_build
 *.pyc
 *pc-terminal*
+*log-data.csv*

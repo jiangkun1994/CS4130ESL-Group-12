@@ -202,6 +202,38 @@ void update_actions_full_control()
 	}
 }
 
+void update_actions_height_control()
+{
+	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
+	{
+		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 12;
+		pitch_moment = cur_pitch << 12;
+		yaw_moment = cur_yaw << 13;
+		old_lift = cur_lift;
+		old_roll = cur_roll;
+		old_pitch = cur_pitch;
+		old_yaw = cur_yaw;
+	}
+}
+
+void end_mode(void)
+{
+	cur_mode = END_MODE;
+	read_mission_data();
+	delete_mission_data();		// Check status from read first?
+	//nrf_delay_ms(10);
+	demo_done = true;
+}
+
+// Need this one?
+void height_control_mode_end(void)
+{
+	cur_mode = HEIGHT_CONTROL_MODE_END;
+	printf("End\n");
+	statefunc = prev_mode;
+}
+
 void manual_mode()
 {
 	cur_mode = MANUAL_MODE;
@@ -272,6 +304,8 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 	sr_off = 0;
 	phi_off = 0;
 	theta_off = 0;
+
+	//printf("sp_off: %d\n", sp_off);
 
 	//indicate that you are in calibration mode
 	nrf_gpio_pin_write(RED,1);
@@ -456,6 +490,12 @@ void full_control_mode()
 				pc_packet.p_adjust = 0;
 			}
 			break;
+		case HEIGHT_CONTROL_MODE:
+			// Change p's?
+			prev_mode = FULL_CONTROL_MODE;
+			statefunc = HEIGHT_CONTROL_MODE;
+			printf("Full->Height\n");
+			break;
 		default:
 			//printf("Not a valid mode!!\n");
 			break;
@@ -463,6 +503,127 @@ void full_control_mode()
 
 	//if there is a new command do the calculations
 	update_actions_full_control();
+}
+
+void height_control_mode()
+{
+	cur_mode = HEIGHT_CONTROL_MODE;
+
+	//indicate that you are in height control mode
+	nrf_gpio_pin_write(RED,0);
+	nrf_gpio_pin_write(YELLOW,1);
+	nrf_gpio_pin_write(GREEN,0);
+
+	//check_connection();
+	if(check_sensor_int_flag())
+	{
+		read_baro();
+		calculate_rpm(p3 * (lift_force - pressure), roll_moment, pitch_moment, yaw_moment); // Not sure that whether the sr should multiply a constant or not
+	}
+
+	handle_transmission_data();
+
+	switch (pc_packet.data[0])
+	{
+		case PANIC_MODE:
+			p3 = 1;
+			statefunc = PANIC_MODE;
+			break;
+		case HEIGHT_CONTROL_MODE:
+			if(cur_lift != pc_packet.data[1]){
+				printf("Cur_lift: %d\n", cur_lift);
+				printf("Received: %d\n", pc_packet.data[1]);
+				cur_lift = pc_packet.data[1];			//?
+				statefunc = prev_mode;
+				printf("Prev_mode: %d\n", prev_mode);
+				break;
+			}
+			cur_pitch = pc_packet.data[2];
+			cur_roll = pc_packet.data[3];
+			cur_yaw = pc_packet.data[4];
+			if(pc_packet.p_adjust == P_YAW_UP)
+			{
+				p += 1;
+				if(p >= 127)
+				{
+					p = 127;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			if(pc_packet.p_adjust == P_YAW_DOWN)
+			{
+				p -= 1;
+				if(p <= 0)
+				{
+					p = 0;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			if(pc_packet.p_adjust == P1_ROLL_PITCH_UP)
+			{
+				p1 += 1;
+				if(p1 >= 127)
+				{
+					p1 = 127;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			if(pc_packet.p_adjust == P1_ROLL_PITCH_DOWN)
+			{
+				p1 -= 1;
+				if(p1 <= 0)
+				{
+					p1 = 0;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			if(pc_packet.p_adjust == P2_ROLL_PITCH_UP)
+			{
+				p2 += 1;
+				if(p2 >= 127)
+				{
+					p2 = 127;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			if(pc_packet.p_adjust == P2_ROLL_PITCH_DOWN)
+			{
+				p2 -= 1;
+				if(p2 <= 0)
+				{
+					p2 = 0;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			if(pc_packet.p_adjust == P3_HEIGHT_UP)
+			{
+				p3 += 1;
+				if(p3 >= 127)
+				{
+					p3 = 127;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			else if(pc_packet.p_adjust == P3_HEIGHT_DOWN)
+			{
+				p3 -= 1;
+				if(p3 <= 0)
+				{
+					p3 = 0;
+				}
+				pc_packet.p_adjust = 0;
+			}
+			break;
+		case HEIGHT_CONTROL_MODE_END:
+			statefunc = HEIGHT_CONTROL_MODE_END;
+			break;
+		default:
+			//printf("Not a valid mode\n");
+			break;
+	}
+
+	//if there is a new command do the calculations
+	update_actions_height_control();
 }
 
 //panic mode state makis
@@ -523,7 +684,6 @@ void panic_mode()
 			//enters safe mode
 			statefunc = SAFE_MODE;
 			panic_loops = 0;
-			read_mission_data();
 		}
 		clear_panic_mode_timer_flag();
 	}
@@ -563,6 +723,9 @@ void safe_mode()
 		//printf("PK_safe|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
 		switch (pc_packet.data[0])
 		{
+			case END_MODE:
+				statefunc = END_MODE;
+				break;
 			//check for not switching to manual mode with offsets different than zero
 			case MANUAL_MODE:
 				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
@@ -674,6 +837,10 @@ void check_battery()
 			battery = false;
 			if(statefunc != SAFE_MODE){
 				statefunc = PANIC_MODE;
+				uint8_t data[2];
+				data[0] = FLAG_1;
+				data[1] = PANIC_MODE;
+				send_ack(data); //Only if mode change, send ack
 			}
 		}
 		else if ((bat_volt > BAT_THRESHOLD) && !battery)
@@ -687,6 +854,9 @@ void check_battery()
 void run_modes()
 {
 	switch (statefunc) {
+		case END_MODE:
+			end_mode();
+			break;
 		case SAFE_MODE:
 			safe_mode();
 			break;
@@ -705,6 +875,12 @@ void run_modes()
 		case FULL_CONTROL_MODE:
 			full_control_mode();
 			break;
+		case HEIGHT_CONTROL_MODE:
+			height_control_mode();
+			break;
+		case HEIGHT_CONTROL_MODE_END:
+			height_control_mode_end();
+			break;
 		default:
 			panic_mode();
 			break;
@@ -719,15 +895,6 @@ int main(void){
 
 	initialize();
 
-	msg_teleTX.mode = 8;
-	msg_teleTX.bat_volt = 42;
-	write_mission_data();
-	msg_teleTX.mode = 3;
-	msg_teleTX.bat_volt = 43;
-	write_mission_data();
-	//read_mission_data();
-	//read_mission_data();
-
 	nrf_delay_ms(2);
 
 	while (!demo_done){
@@ -741,6 +908,12 @@ int main(void){
 			read_baro();
 		}
 		run_modes();
+
+		if(check_log_timer_flag())
+		{
+			write_mission_data();
+			clear_log_timer_flag();
+		}
 
 		send_telemetry();
 		check_connection();

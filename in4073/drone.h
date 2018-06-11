@@ -11,6 +11,9 @@ void panic_mode();
 void calibration_mode();
 void yaw_control_mode();
 void full_control_mode();
+void height_control_mode();
+void height_control_mode_end(void);
+void end_mode(void);
 //void check_connection();
 //void process_input();
 
@@ -21,11 +24,13 @@ uint8_t statefunc;
 
 //variable to hold current mode
 char cur_mode;
+char prev_mode;
 
 //p controller value
 unsigned char p;
 unsigned char p1;
 unsigned char p2;
+unsigned char p3;
 
 //variable to hold current movement
 int8_t cur_lift;

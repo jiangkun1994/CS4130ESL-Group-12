@@ -44,20 +44,25 @@
 
 /* all kinds of modes */
 /* all kinds of modes */
-#define SAFE_MODE						0X00
-#define PANIC_MODE					0X01
-#define MANUAL_MODE					0x02
-#define CALIBRATION_MODE		0x03
-#define YAW_CONTROL_MODE		0x04
-#define FULL_CONTROL_MODE		0x05
-#define IDLE_MODE						0x10
+#define SAFE_MODE								0X00
+#define PANIC_MODE							0X01
+#define MANUAL_MODE							0x02
+#define CALIBRATION_MODE				0x03
+#define YAW_CONTROL_MODE				0x04
+#define FULL_CONTROL_MODE				0x05
+#define HEIGHT_CONTROL_MODE			0x07
+#define HEIGHT_CONTROL_MODE_END	0x0A
+#define END_MODE								0x09
+#define IDLE_MODE								0x10
 
-#define P_YAW_UP 						0x01
-#define P_YAW_DOWN					0x02
-#define P1_ROLL_PITCH_UP		0x04
-#define P1_ROLL_PITCH_DOWN	0x08
-#define P2_ROLL_PITCH_UP		0x10
-#define P2_ROLL_PITCH_DOWN	0x20
+#define P_YAW_UP 								0x01
+#define P_YAW_DOWN							0x02
+#define P1_ROLL_PITCH_UP				0x04
+#define P1_ROLL_PITCH_DOWN			0x08
+#define P2_ROLL_PITCH_UP				0x10
+#define P2_ROLL_PITCH_DOWN			0x20
+#define P3_HEIGHT_DOWN					0x15
+#define P3_HEIGHT_UP			  		0x16
 
 uint8_t flags;
 extern struct msg_telemetry_template msg_teleTX;

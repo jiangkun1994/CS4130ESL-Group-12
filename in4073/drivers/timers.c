@@ -18,6 +18,7 @@ bool timer_flag;
 bool telemetry_timer_flag;
 bool panic_timer_flag;
 bool connection_timer_flag;
+bool log_timer_flag;
 
 void TIMER2_IRQHandler(void)
 {
@@ -103,6 +104,16 @@ void clear_panic_mode_timer_flag(void)
 	panic_timer_flag = false;
 }
 
+bool check_log_timer_flag(void)
+{
+	return log_timer_flag;
+}
+
+void clear_log_timer_flag(void)
+{
+	log_timer_flag = false;
+}
+
 void quadrupel_timer_handler(void *p_context)
 {
 	timer_flag = true;
@@ -121,6 +132,11 @@ void panic_mode_timer_handler(void *p_context)
 void connection_mode_timer_handler(void *p_context)
 {
 	connection_timer_flag = true;
+}
+
+void log_timer_handler(void *p_context)
+{
+	log_timer_flag = true;
 }
 
 void timers_init(void)
@@ -185,7 +201,7 @@ void timers_init(void)
 
 	// app timer
 	#define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
-	#define APP_TIMER_OP_QUEUE_SIZE         6                                           /**< Size of timer operation queues. */
+	#define APP_TIMER_OP_QUEUE_SIZE         8                                           /**< Size of timer operation queues. */
 	#define QUADRUPEL_TIMER_PERIOD  APP_TIMER_TICKS(TIMER_PERIOD, APP_TIMER_PRESCALER)  // timer period is in ms
 
 	APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
@@ -208,5 +224,10 @@ void timers_init(void)
 	APP_TIMER_DEF(connection_mode_timer);
 	app_timer_create(&connection_mode_timer, APP_TIMER_MODE_REPEATED, connection_mode_timer_handler);
 	app_timer_start(connection_mode_timer, CONNECTION_TIMER_PERIOD, NULL);
+
+	#define LOG_TIMER_PERIOD APP_TIMER_TICKS(LOG_PERIOD, APP_TIMER_PRESCALER)
+	APP_TIMER_DEF(log_timer);
+	app_timer_create(&log_timer, APP_TIMER_MODE_REPEATED, log_timer_handler);
+	app_timer_start(log_timer, LOG_TIMER_PERIOD, NULL);
 
 }

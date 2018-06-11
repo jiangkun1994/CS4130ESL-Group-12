@@ -29,8 +29,8 @@ uint8_t p_adjust = 0;
 uint8_t connection_failure_flag = 0;
 bool read_joystick = true;
 
-#define BAT_THRESHOLD   600
-#define BAT_WARNING			801
+#define BAT_THRESHOLD   500
+#define BAT_WARNING			501
 
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX);
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX);
@@ -53,8 +53,8 @@ void tx_packet(uint8_t *packet){
 // Argument types?
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX)
 {
-	printf("Writing to file\n");
-	FILE *f = fopen("filename.csv", "a");
+	//printf("Writing to file\n");
+	FILE *f = fopen(filename, "a");
 	if (f == NULL)
 	{
     printf("Error opening file!\n");
@@ -170,6 +170,9 @@ int main(int argc, char **argv)
 								{
 									if (rx.data[1] == CALIBRATION_MODE)
 										mode = SAFE_MODE;
+									else if(mode != SAFE_MODE && rx.data[1] == END_MODE){
+										mode = PANIC_MODE;
+									}
 									else
 										mode = rx.data[1];
 									//printf("MODE CHANGED CORRECTLY TO %d\n", rx.data[1]);
@@ -198,10 +201,10 @@ int main(int argc, char **argv)
 
 								break;
 						case PACKET_LOG:
-							printf("Log received\n" );
+							//printf("Log received\n" );
 							msg_logRX = (struct msg_telemetry_template *)&rx.data[0];
 							//print_transmission_data(msg_logRX);
-							write_log_to_file("filename.txt", msg_logRX);
+							write_log_to_file("log-data.csv", msg_logRX);
 							break;
 						default:
 							printf("UNDEFINED PACKET RECIEVED\n");

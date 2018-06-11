@@ -83,20 +83,35 @@ void kb_input(uint8_t input_key){
             else
                 printf("The control data from kb and js are not zero!! Please press button c and check js\n");
             break;
+        case SEVEN:
+        printf("Mode: %d\n", mode);
+              if (mode != HEIGHT_CONTROL_MODE){
+                mode = HEIGHT_CONTROL_MODE;
+              }
+              else{
+                  mode = HEIGHT_CONTROL_MODE_END;
+              }
+          break;
 		case ESC:
-			mode = PANIC_MODE;
+			mode = END_MODE;
 			break;
 		case 'a': // lift (engine RPM, keyboard: a/z, joystick: throttle)
         	if(kb_lift_offset!=127)
         	{
             	kb_lift_offset+=1;
         	}
+          // if(mode == HEIGHT_CONTROL_MODE){
+          //   mode = HEIGHT_CONTROL_MODE_END;
+          // }
         	break;
 		case 'z':
         	if(kb_lift_offset!=-127)
         	{
             	kb_lift_offset-=1;
         	}
+          // if(mode == HEIGHT_CONTROL_MODE){
+          //   mode = HEIGHT_CONTROL_MODE_END;
+          // }
         	break;
 		case 'q': // yaw (yaw, keyboard: q/w, joystick: twist handle)
         	if(kb_yaw_offset!=-63)
@@ -164,6 +179,12 @@ void kb_input(uint8_t input_key){
         case 'l':
             p_adjust = P2_ROLL_PITCH_DOWN;
             break;
+        case '-':
+          p_adjust = P3_HEIGHT_DOWN;
+          break;
+        case '=':
+          p_adjust = P3_HEIGHT_UP;
+          break;
         default:
         	//return;
         	break;
