@@ -7,15 +7,15 @@ bool write_mission_data(void)
 {
 	//printf("Writing to flash\n");
 
-  bool status;
+  	bool status;
 	update_telemetry_data();
 
-  status = flash_write_bytes(address, (uint8_t *) &msg_teleTX, (uint32_t) sizeof(struct msg_telemetry_template));
+  	status = flash_write_bytes(address, (uint8_t *) &msg_teleTX, (uint32_t) sizeof(struct msg_telemetry_template));
 	// printf("Address W: %ld\n", address);
 
-  address += (uint32_t)sizeof(struct msg_telemetry_template);
+  	address += (uint32_t)sizeof(struct msg_telemetry_template);
 
-  return status;
+  	return status;
 }
 
 bool read_mission_data(void)
@@ -23,7 +23,8 @@ bool read_mission_data(void)
 	uint32_t i;
 	uint8_t j;
 	bool status = false;
-	uint8_t log_packet[sizeof(struct msg_telemetry_template)+PACKET_OVERHEAD];
+	//uint8_t log_packet[sizeof(struct msg_telemetry_template)+PACKET_OVERHEAD];
+	uint8_t log_packet[MAX_PAYLOAD];
 	uint8_t data[sizeof(struct msg_telemetry_template)];
 
 	for(i = 0; i < address; i+=sizeof(struct msg_telemetry_template)){

@@ -86,7 +86,7 @@ struct packet{
 		uint8_t index;
 		uint8_t crc_fails;
 		uint8_t p_adjust;
-		bool logging;
+		uint8_t logging;
 }__attribute__((packed));
 
 struct packet pc_packet;
@@ -98,7 +98,7 @@ struct msg_pc_template{
 	int8_t pitch;
 	int8_t yaw;
 	uint8_t P;
-	bool LOGGING;
+	uint8_t LOGGING;
 }__attribute__((packed));
 
 struct msg_telemetry_template{

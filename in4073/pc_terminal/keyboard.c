@@ -123,9 +123,9 @@ void kb_input(uint8_t input_key){
     	case 'c':
       		{
       		    kb_yaw_offset = 0;
-              kb_lift_offset = 0;
-              kb_roll_offset = 0;
-              kb_pitch_offset = 0;
+                kb_lift_offset = 0;
+                kb_roll_offset = 0;
+                kb_pitch_offset = 0;
       		}
 			break;
     case 'f':
@@ -181,10 +181,10 @@ void kb_input(uint8_t input_key){
             p_adjust = P3_HEIGHT_UP;
             break;
         case 'p':
-            if(logging == true)
-                logging == false;
+            if(logging == 1)
+                logging = 0;
             else
-                logging = true;
+                logging = 1;
             break;
         default:
         	//return;

@@ -233,7 +233,7 @@ void manual_mode()
 	//read the new messages to come
 	handle_transmission_data();
 	//printf("PK_manual|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
-	if(pc_packet.logging)
+	if(pc_packet.logging == 1)
 		write_mission_data();
 
 	switch (pc_packet.data[0])
@@ -350,7 +350,7 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 
 	handle_transmission_data();
 
-	if(pc_packet.logging)
+	if(pc_packet.logging == 1)
 		write_mission_data();
 
 	switch (pc_packet.data[0])
@@ -412,7 +412,7 @@ void full_control_mode()
 
 	handle_transmission_data();
 
-	if(pc_packet.logging)
+	if(pc_packet.logging == 1)
 		write_mission_data();
 
 	switch(pc_packet.data[0])
@@ -510,7 +510,7 @@ void height_control_mode()
 
 	handle_transmission_data();
 
-	if(pc_packet.logging)
+	if(pc_packet.logging == 1)
 		write_mission_data();
 
 	switch (pc_packet.data[0])
@@ -610,11 +610,15 @@ void panic_mode()
 			//enters safe mode
 			statefunc = SAFE_MODE;
 			panic_loops = 0;
-			read_mission_data();
-			delete_mission_data();
+			//read_mission_data();
+			//delete_mission_data();
 		}
+		// read_mission_data();
+	 //    delete_mission_data();
 		clear_panic_mode_timer_flag();
 	}
+	// read_mission_data();
+	// delete_mission_data();
 }
 
 //safe mode state makis
@@ -725,7 +729,7 @@ void initialize()
 	pc_packet.data[2] = 0; // pitch
 	pc_packet.data[3] = 0; // roll
 	pc_packet.data[4] = 0; // yaw
-	pc_packet.logging = false;
+	pc_packet.logging = 0;
 	rx.status = INIT;
 
 	//initialise rest of the variables to safe values, just in case
@@ -835,8 +839,7 @@ int main(void){
 	// write_mission_data();
 	// read_mission_data();
 	// read_mission_data();
-
-	// nrf_delay_ms(2);
+	//nrf_delay_ms(2);
 
 	while (!demo_done){
 
@@ -844,8 +847,7 @@ int main(void){
 
 		//get to the state
 		//(*statefunc)();
-		run_modes();
-
+		run_modes();        
 		send_telemetry();
 		check_connection();
 	}

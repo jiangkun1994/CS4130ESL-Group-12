@@ -28,7 +28,7 @@ int fd = 0;
 uint8_t p_adjust = 0;
 uint8_t connection_failure_flag = 0;
 bool read_joystick = true;
-bool logging = false;
+uint8_t logging = 0;
 
 #define BAT_THRESHOLD   500
 #define BAT_WARNING		501
@@ -54,7 +54,7 @@ void tx_packet(uint8_t *packet){
 // Argument types?
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX)
 {
-	printf("Writing to file\n");
+	//printf("Writing to file\n");
 	FILE *f = fopen("filename.csv", "a");
 	if (f == NULL)
 	{
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
 
 								break;
 						case PACKET_LOG:
-							printf("Log received\n" );
+							//printf("Log received\n" );
 							msg_logRX = (struct msg_telemetry_template *)&rx.data[0];
 							//print_transmission_data(msg_logRX);
 							write_log_to_file("filename.txt", msg_logRX);
