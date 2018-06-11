@@ -147,7 +147,7 @@ void check_connection()
 		uint32_t time_diff;
 		cur_time_us = get_time_us();
 		time_diff = cur_time_us - time_latest_packet_us;
-		if((time_diff > 600000) && cur_mode != SAFE_MODE)
+		if((time_diff > 600000) && cur_mode != SAFE_MODE && cur_mode != END_MODE)
 		{
 			connection = false;
 			statefunc = PANIC_MODE;
@@ -909,7 +909,7 @@ int main(void){
 		}
 		run_modes();
 
-		if(check_log_timer_flag())
+		if(check_log_timer_flag() && cur_mode != END_MODE)
 		{
 			write_mission_data();
 			clear_log_timer_flag();
