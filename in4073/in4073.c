@@ -855,6 +855,12 @@ int main(void){
 
 		//get to the state
 		//(*statefunc)();
+		// if(check_sensor_int_flag())
+		// {
+		// 	get_raw_sensor_data();
+		// }
+		// if(pc_packet.logging == 1)
+		// 	write_mission_data();
 		run_modes();        
 		send_telemetry();
 		check_connection();

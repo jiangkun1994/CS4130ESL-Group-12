@@ -55,7 +55,7 @@ void tx_packet(uint8_t *packet){
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX)
 {
 	//printf("Writing to file\n");
-	FILE *f = fopen("logfile.dat", "a");
+	FILE *f = fopen("logfile.csv", "a");
 	if (f == NULL)
 	{
     	printf("Error opening file!\n");
