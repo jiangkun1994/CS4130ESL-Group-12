@@ -303,6 +303,7 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
+		//get_raw_sensor_data();
 		//printf("SAMPLE number:%d\n", sample);
 
 		// Need to check if data from DMP are junk data
@@ -403,7 +404,8 @@ void full_control_mode()
 
 	if(check_sensor_int_flag())
 	{
-		get_dmp_data();
+		//get_dmp_data();
+		get_raw_sensor_data();
 		calculate_rpm(lift_force,
 			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
 			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
@@ -656,6 +658,12 @@ void safe_mode()
 	{
 		handle_transmission_data();
 		//printf("PK_safe|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
+		if(pc_packet.p_adjust == LOGGING_DATA)
+		{
+			read_mission_data();
+			pc_packet.p_adjust = 0;
+		}
+
 		switch (pc_packet.data[0])
 		{
 			//check for not switching to manual mode with offsets different than zero

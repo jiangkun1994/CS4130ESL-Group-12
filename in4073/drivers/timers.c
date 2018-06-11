@@ -14,6 +14,7 @@
 #include "app_timer.h"
 
 uint32_t global_time;
+bool logging_timer_flag;
 bool timer_flag;
 bool telemetry_timer_flag;
 bool panic_timer_flag;
@@ -73,6 +74,16 @@ void clear_timer_flag(void)
 	timer_flag = false;
 }
 
+bool check_logging_timer_flag(void)
+{
+	return logging_timer_flag;
+}
+
+void clear_logging_timer_flag(void)
+{
+	logging_timer_flag = false;
+}
+
 bool check_telemetry_timer_flag(void)
 {
 	return telemetry_timer_flag;
@@ -108,14 +119,19 @@ void quadrupel_timer_handler(void *p_context)
 	timer_flag = true;
 }
 
+void logging_timer_handler(void *p_context)
+{
+	logging_timer_flag = true;
+}
+
 void telemetry_timer_handler(void *p_context)
 {
-  telemetry_timer_flag = true;
+  	telemetry_timer_flag = true;
 }
 
 void panic_mode_timer_handler(void *p_context)
 {
-  panic_timer_flag = true;
+  	panic_timer_flag = true;
 }
 
 void connection_mode_timer_handler(void *p_context)
@@ -127,7 +143,8 @@ void timers_init(void)
 {
 	global_time = 0;
 	timer_flag = false;
-  telemetry_timer_flag = false;
+  	telemetry_timer_flag = false;
+  	logging_timer_flag = false;
 
 	NRF_TIMER2->PRESCALER 	= 0x1UL; // 0.125us
 	NRF_TIMER2->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
@@ -194,10 +211,15 @@ void timers_init(void)
 	app_timer_create(&quadrupel_timer, APP_TIMER_MODE_REPEATED, quadrupel_timer_handler);
 	app_timer_start(quadrupel_timer, QUADRUPEL_TIMER_PERIOD, NULL);
 
-  #define TEL_TIMER_PERIOD  APP_TIMER_TICKS(TELEMETRY_TIMER_PERIOD, APP_TIMER_PRESCALER)  // timer period is in ms
-  APP_TIMER_DEF(telemetry_timer);
-  app_timer_create(&telemetry_timer, APP_TIMER_MODE_REPEATED, telemetry_timer_handler);
-  app_timer_start(telemetry_timer, TEL_TIMER_PERIOD, NULL);
+	#define LOG_TIMER_PERIOD  APP_TIMER_TICKS(LOGGING_TIMER_PERIOD, APP_TIMER_PRESCALER)  // timer period is in ms
+  	APP_TIMER_DEF(logging_timer);
+  	app_timer_create(&logging_timer, APP_TIMER_MODE_REPEATED, logging_timer_handler);
+  	app_timer_start(logging_timer, LOGGING_TIMER_PERIOD, NULL);
+
+  	#define TEL_TIMER_PERIOD  APP_TIMER_TICKS(TELEMETRY_TIMER_PERIOD, APP_TIMER_PRESCALER)  // timer period is in ms
+  	APP_TIMER_DEF(telemetry_timer);
+  	app_timer_create(&telemetry_timer, APP_TIMER_MODE_REPEATED, telemetry_timer_handler);
+  	app_timer_start(telemetry_timer, TEL_TIMER_PERIOD, NULL);
 
 	#define	PM_TIMER_PERIOD APP_TIMER_TICKS(PANIC_MODE_PERIOD, APP_TIMER_PRESCALER)
 	APP_TIMER_DEF(panic_mode_timer);

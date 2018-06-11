@@ -55,21 +55,21 @@ void tx_packet(uint8_t *packet){
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX)
 {
 	//printf("Writing to file\n");
-	FILE *f = fopen("filename.csv", "a");
+	FILE *f = fopen("logfile.dat", "a");
 	if (f == NULL)
 	{
-    printf("Error opening file!\n");
-    exit(1);
+    	printf("Error opening file!\n");
+    	exit(1);
 	}
-		fprintf(f, "%d,", msg_teleRX->Time_stamp);
-		fprintf(f, "%d,%d,%d,%d,%d,", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
-		fprintf(f, "%d,%d,%d,%d,", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
-		fprintf(f, "%d,%d,%d,",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
-		fprintf(f, "%d,%d,%d,",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
-		fprintf(f, "%d,%d,%d,%d,%d,",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
-		fprintf(f, "%d,%d,%d,%d\n",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
+	fprintf(f, "%d, ", msg_teleRX->Time_stamp);
+	fprintf(f, "%d, %d, %d, %d, %d, ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
+	fprintf(f, "%d, %d, %d, %d, ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
+	fprintf(f, "%d, %d, %d, ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
+	fprintf(f, "%d, %d, %d, ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
+	fprintf(f, "%d, %d, %d, %d, %d, ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
+	fprintf(f, "%d, %d, %d, %d\n",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
 
-		fclose(f);
+	fclose(f);
 }
 
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX)
