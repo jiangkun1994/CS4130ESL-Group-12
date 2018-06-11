@@ -143,7 +143,8 @@ void timers_init(void)
 {
 	global_time = 0;
 	timer_flag = false;
-  telemetry_timer_flag = false;
+  	telemetry_timer_flag = false;
+  	log_timer_flag = false;
 
 	NRF_TIMER2->PRESCALER 	= 0x1UL; // 0.125us
 	NRF_TIMER2->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;

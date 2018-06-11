@@ -25,6 +25,7 @@ char js_lift;
 
 extern char mode;
 extern uint8_t p_adjust;
+extern uint8_t logging;
 
 int	axis[6];
 int	button[12];

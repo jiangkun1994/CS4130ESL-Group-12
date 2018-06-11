@@ -72,6 +72,7 @@ void update_telemetry_data(void)
 	msg_teleTX.P = p;
 	msg_teleTX.P1 = p1;
 	msg_teleTX.P2 = p2;
+	msg_teleTX.P3 = p3;
 	msg_teleTX.pressure = pressure;
 	msg_teleTX.temperature = temperature;
 
@@ -126,6 +127,7 @@ void handle_transmission_data()
 					pc_packet.data[3] = msg_pcRX->roll;
 					pc_packet.data[4] = msg_pcRX->yaw;
 					pc_packet.p_adjust = msg_pcRX->P;
+					pc_packet.logging = msg_pcRX->LOGGING;
 					break;
 				default:
 					break;
@@ -220,8 +222,8 @@ void update_actions_height_control()
 void end_mode(void)
 {
 	cur_mode = END_MODE;
-	read_mission_data();
-	delete_mission_data();		// Check status from read first?
+	// read_mission_data();
+	// delete_mission_data();		// Check status from read first?
 	//nrf_delay_ms(10);
 	demo_done = true;
 }
@@ -248,6 +250,9 @@ void manual_mode()
 	//read the new messages to come
 	handle_transmission_data();
 	//printf("PK_manual|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
+	if(pc_packet.logging == 1)
+		write_mission_data();
+
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
@@ -364,6 +369,10 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 
 	handle_transmission_data();
 
+	if(pc_packet.logging == 1)
+		write_mission_data();
+
+
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
@@ -422,6 +431,10 @@ void full_control_mode()
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
+
+	if(pc_packet.logging == 1)
+		write_mission_data();
+
 	switch(pc_packet.data[0])
 	{
 		case PANIC_MODE:
@@ -522,6 +535,9 @@ void height_control_mode()
 	}
 
 	handle_transmission_data();
+
+	if(pc_packet.logging == 1)
+		write_mission_data();
 
 	switch (pc_packet.data[0])
 	{
@@ -721,6 +737,12 @@ void safe_mode()
 	{
 		handle_transmission_data();
 		//printf("PK_safe|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
+		if(pc_packet.p_adjust == LOGGING_DATA)
+		{
+			read_mission_data();
+			pc_packet.p_adjust = 0;
+		}
+
 		switch (pc_packet.data[0])
 		{
 			case END_MODE:
@@ -789,6 +811,7 @@ void initialize()
 	pc_packet.data[2] = 0; // pitch
 	pc_packet.data[3] = 0; // roll
 	pc_packet.data[4] = 0; // yaw
+	pc_packet.logging = 0;
 	rx.status = INIT;
 
 	//initialise rest of the variables to safe values, just in case
@@ -815,6 +838,7 @@ void initialize()
 	p = 1;
 	p1 = 1;
 	p2 = 1;
+	p3 = 1;
 
 	calibration_flag = false;
 
@@ -895,7 +919,7 @@ int main(void){
 
 	initialize();
 
-	nrf_delay_ms(2);
+	//nrf_delay_ms(2);
 
 	while (!demo_done){
 
@@ -909,11 +933,11 @@ int main(void){
 		}
 		run_modes();
 
-		if(check_log_timer_flag())
-		{
-			write_mission_data();
-			clear_log_timer_flag();
-		}
+		// if(check_log_timer_flag())
+		// {
+		// 	write_mission_data();
+		// 	clear_log_timer_flag();
+		// }
 
 		send_telemetry();
 		check_connection();

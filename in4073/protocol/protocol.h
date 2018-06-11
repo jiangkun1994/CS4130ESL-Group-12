@@ -63,6 +63,7 @@
 #define P2_ROLL_PITCH_DOWN			0x20
 #define P3_HEIGHT_DOWN					0x15
 #define P3_HEIGHT_UP			  		0x16
+#define LOGGING_DATA		0x17
 
 uint8_t flags;
 extern struct msg_telemetry_template msg_teleTX;
@@ -89,6 +90,7 @@ struct packet{
 		uint8_t index;
 		uint8_t crc_fails;
 		uint8_t p_adjust;
+		uint8_t logging;
 }__attribute__((packed));
 
 struct packet pc_packet;
@@ -100,6 +102,7 @@ struct msg_pc_template{
 	int8_t pitch;
 	int8_t yaw;
 	uint8_t P;
+	uint8_t LOGGING;
 }__attribute__((packed));
 
 struct msg_telemetry_template{
@@ -116,6 +119,7 @@ struct msg_telemetry_template{
   uint8_t P;
   uint8_t P1;
   uint8_t P2;
+  uint8_t P3;
   int32_t pressure;
 	int32_t temperature;
 	uint32_t Time_stamp;

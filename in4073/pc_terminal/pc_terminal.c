@@ -28,6 +28,7 @@ int fd = 0;
 uint8_t p_adjust = 0;
 uint8_t connection_failure_flag = 0;
 bool read_joystick = true;
+uint8_t logging = 0;
 
 #define BAT_THRESHOLD   500
 #define BAT_WARNING			501
@@ -60,13 +61,13 @@ void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX
     printf("Error opening file!\n");
     exit(1);
 	}
-		fprintf(f, "%d,", msg_teleRX->Time_stamp);
-		fprintf(f, "%d,%d,%d,%d,%d,", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
-		fprintf(f, "%d,%d,%d,%d,", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
-		fprintf(f, "%d,%d,%d,",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
-		fprintf(f, "%d,%d,%d,",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
-		fprintf(f, "%d,%d,%d,%d,%d,",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
-		fprintf(f, "%d,%d,%d,%d\n",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
+		fprintf(f, "%d, ", msg_teleRX->Time_stamp);
+		fprintf(f, "%d, %d, %d, %d, %d, ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
+		fprintf(f, "%d, %d, %d, %d, ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
+		fprintf(f, "%d, %d, %d, ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
+		fprintf(f, "%d, %d, %d, ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
+		fprintf(f, "%d, %d, %d, %d, %d, ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
+		fprintf(f, "%d, %d, %d, %d, %d\n",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2, msg_teleRX->P3);
 
 		fclose(f);
 }
@@ -78,7 +79,7 @@ void print_transmission_data(struct msg_telemetry_template *msg_teleRX)
 	printf("%6d %6d %6d| ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
 	printf("%6d %6d %6d| ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
 	printf("%6d %6d %6d %d %d| ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
-	printf("%4d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
+	printf("%4d %2d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2, msg_teleRX->P3);
 }
 /*----------------------------------------------------------------
  * main -- execute terminal
@@ -141,6 +142,7 @@ int main(int argc, char **argv)
 					msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, js_pitch);
 					msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, js_yaw);
 					msg_pcTX.P 			= p_adjust;
+					msg_pcTX.LOGGING = logging;
 					p_adjust = 0;
 
 					create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);

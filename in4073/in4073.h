@@ -32,6 +32,10 @@
 #define CHECK_RANGE(x,y,z,n) ( (x > -n && x < n && y > -n && y < n && z > -n && z < n) ? 1 : 0)
 bool demo_done;
 
+// for data logging
+extern uint32_t address;
+extern uint32_t address_read;
+
 // Control
 int16_t motor[4],ae[4];
 void run_filters_and_control();
@@ -41,7 +45,7 @@ void run_filters_and_control();
 #define PANIC_MODE_PERIOD				200	//200ms
 #define TELEMETRY_TIMER_PERIOD 	500	//500ms
 #define CONNECTION_MODE_PERIOD	400 //400ms
-#define LOG_PERIOD							50	//50 ms
+#define LOG_PERIOD							100	//100 ms
 #define MIN_PANIC_LOOPS					4
 void timers_init(void);
 uint32_t get_time_us(void);
@@ -125,9 +129,9 @@ void ble_init(void);
 void ble_send(void);
 
 // Testing
-bool write_mission_data(void);
-bool read_mission_data(void);
-bool delete_mission_data(void);
+void write_mission_data(void);
+void read_mission_data(void);
+//bool delete_mission_data(void);
 void update_telemetry_data(void);
 
 
