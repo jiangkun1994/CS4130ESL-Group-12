@@ -31,7 +31,7 @@ bool read_joystick = true;
 uint8_t logging = 0;
 
 #define BAT_THRESHOLD   500
-#define BAT_WARNING			501
+#define BAT_WARNING		501
 
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX);
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX);
