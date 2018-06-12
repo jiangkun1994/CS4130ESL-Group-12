@@ -24,7 +24,7 @@ void butterworth()
 
 	while(i < 6)
 	{
-		y[i][0] = (multiply(cons_a0, x[i][0]) + multiply(cons_a1, x[i][1]) - multiply(cons_b1, y[i][1])) >> 14;
+		y[i][0] = multiply(cons_a0, x[i][0]) + multiply(cons_a1, x[i][1]) - multiply(cons_b1, y[i][1]);
 
 		x[i][1] = x[i][0];
 		y[i][1] = y[i][0];
@@ -52,20 +52,20 @@ void kalman()
 
 	// say is sphi, which means when roll, the drone will be prone to move by y axis
 	sp_32 = sp_32 - p_b;
-	phi_32 = phi_32 + (multiply(sp_32, flo2fix(P2PHI)) >> 14);
-	phi_32 = phi_32 - (multiply((phi_32 - say_32), (1 >> 14)) >> 14);
-	p_b = p_b + (multiply(multiply((phi_32 - say_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14);
+	phi_32 = phi_32 + multiply(sp_32, P2PHI);
+	phi_32 = phi_32 - multiply((phi_32 - say_32), C1);
+	p_b = p_b + multiply((phi_32 - say_32), C2);
 
 	// sax is stheta, which means when pitch, the drone will be prone to move by x axis
 	sq_32 = sq_32 - q_b;
-	theta_32 = theta_32 + (multiply(sq_32, flo2fix(P2PHI)) >> 14);
-	theta_32 = theta_32 - (multiply((theta_32 - sax_32), (1 >> 14)) >> 14);
-	q_b = q_b + (multiply(multiply((theta_32 - sax_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14);
+	theta_32 = theta_32 + multiply(sq_32, P2PHI);
+	theta_32 = theta_32 - multiply((theta_32 - sax_32), C1);
+	q_b = q_b + multiply((theta_32 - sax_32), C2);
 
 	sr_32 = sr_32 - r_b;
-	psi_32 = psi_32 + (multiply(sr_32, flo2fix(P2PHI)) >> 14);
-	psi_32 = psi_32 - (multiply((psi_32 - saz_32), (1 >> 14)) >> 14);
-	r_b = r_b + (multiply(multiply((psi_32 - saz_32), flo2fix(123.4567901)) >> 14, flo2fix(0.000001)) >> 14);
+	psi_32 = psi_32 + multiply(sr_32, P2PHI);
+	psi_32 = psi_32 - multiply((psi_32 - saz_32), C1);
+	r_b = r_b + multiply((psi_32 - saz_32), C2);
 
 	sp = _32to16(sp_32);
 	sq = _32to16(sq_32);

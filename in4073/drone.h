@@ -55,6 +55,12 @@ int16_t sr_off;
 int16_t phi_off;
 int16_t theta_off;
 
+int32_t sp_off_;
+int32_t sq_off_;
+int32_t sr_off_;
+int32_t phi_off_;
+int32_t theta_off_;
+
 //counters to take care of exiting when communication breaks down
 extern uint32_t time_latest_packet_us, cur_time_us;
 

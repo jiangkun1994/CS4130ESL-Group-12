@@ -43,13 +43,13 @@ void send_ack(uint8_t *data)
 	}
 }
 
-void create_and_send_ack(uint8_t flags, uint8_t mode)
-{
-	uint8_t data[2];
-	data[0] = flags;
-	data[1] = mode;
-	send_ack(data);
-}
+// void create_and_send_ack(uint8_t flags, uint8_t mode)
+// {
+// 	uint8_t data[2];
+// 	data[0] = flags;
+// 	data[1] = mode;
+// 	send_ack(data);
+// }
 
 
 void update_telemetry_data(void)
@@ -288,21 +288,23 @@ void manual_mode()
 }
 
 /* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
-void calibration_mode() // what is the advice from TA about calibration mode? Some initial values from DMP are not right?
+void calibration_mode()
 {
 	static uint16_t sample = 0;
 	cur_mode = CALIBRATION_MODE;
-
-	sp_off = 0;
-	sq_off = 0;
-	sr_off = 0;
-	phi_off = 0;
-	theta_off = 0;
-
 	//indicate that you are in calibration mode
 	nrf_gpio_pin_write(RED,1);
 	nrf_gpio_pin_write(YELLOW,1);
 	nrf_gpio_pin_write(GREEN,0);
+
+	if(sample == 0)
+	{
+		sp_off_ = 0;
+		sq_off_ = 0;
+		sr_off_ = 0;
+		phi_off_ = 0;
+		theta_off_ = 0;
+	}
 
 	handle_transmission_data();
 
@@ -314,27 +316,27 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 			butterworth();
 			kalman();
 
-			sp_off = sp_off + sp;
-			sq_off = sq_off + sq;
-			sr_off = sr_off + sr;
-			phi_off = phi_off + phi;
-			theta_off = theta_off + theta;
+			sp_off_ = sp_off_ + sp;
+			sq_off_ = sq_off_ + sq;
+			sr_off_ = sr_off_ + sr;
+			phi_off_ = phi_off_ + phi;
+			theta_off_ = theta_off_ + theta;
 			sample++;
-			printf("sample raw: %d\n", sample);
+			//printf("sample raw: %d\n", sample);
 		}
 		else
 		{
 			get_dmp_data();
-			printf("dmp\n");
+			//printf("dmp\n");
 			if (CHECK_RANGE(sp, sq, sr, 5))
 			{
-				sp_off = sp_off + sp;
-				sq_off = sq_off + sq;
-				sr_off = sr_off + sr;
-				phi_off = phi_off + phi;
-				theta_off = theta_off + theta;
+				sp_off_ = sp_off_ + sp;
+				sq_off_ = sq_off_ + sq;
+				sr_off_ = sr_off_ + sr;
+				phi_off_ = phi_off_ + phi;
+				theta_off_ = theta_off_ + theta;
 				sample++;
-				printf("sample dmp: %d\n", sample);
+				//printf("sample dmp: %d\n", sample);
 			}
 		}
 		//printf("SAMPLE number:%d\n", sample);
@@ -350,13 +352,15 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		// }
 	}
 
-	if (sample >= 150){
-		// calculate the average off set for 150 samples
-		sp_off = sp_off / 150;
-		sq_off = sq_off / 150;
-		sr_off = sr_off / 150;
-		phi_off = phi_off / 150;
-		theta_off = theta_off / 150;
+	if (sample >= 500){
+		// calculate the average off set for 500 samples
+		printf("Before: %ld\n", phi_off_);
+		sp_off = (int16_t)(sp_off_ / 500);
+		sq_off = (int16_t)(sq_off_ / 500);
+		sr_off = (int16_t)(sr_off_ / 500);
+		phi_off = (int16_t)(phi_off_ / 500);
+		theta_off = (int16_t)(theta_off_ / 500);
+		printf("After: %d\n", phi_off);
 		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 		printf("CALIBRATION MODE FINISHED! \n");
 		statefunc = SAFE_MODE;
@@ -798,13 +802,13 @@ void initialize()
 	timers_init();
 	adc_init();
 	twi_init();
-	imu_init(true, 100);
+	imu_init(false, 500);
 	baro_init();
 	spi_flash_init();
 	adc_request_sample();
 	//ble_init();
 	demo_done = false;
-	raw_mode_flag = false;
+	raw_mode_flag = true;
 	//battery = true;
 	//adc_request_sample();
 

@@ -38,9 +38,9 @@ int16_t _32to16(int32_t value)
 // multiply two int32_t number, so it needs right-shifting by 14 bits to get back to the int32_t
 int64_t multiply(int32_t a, int32_t b)
 {
-        //int32_t result;
+        int32_t result;
         int64_t temp;
         temp = (int64_t)(a * b);
-        //result = (int32_t)(temp >> 14);
-        return temp;
+        result = (int32_t)(temp >> 14);
+        return result;
 }
