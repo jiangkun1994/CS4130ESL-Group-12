@@ -50,6 +50,7 @@
 #define CALIBRATION_MODE				0x03
 #define YAW_CONTROL_MODE				0x04
 #define FULL_CONTROL_MODE				0x05
+#define RAW_MODE					0x06
 #define HEIGHT_CONTROL_MODE			0x07
 #define HEIGHT_CONTROL_MODE_END	0x0A
 #define END_MODE								0x09

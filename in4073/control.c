@@ -12,8 +12,8 @@
 
 #include "in4073.h"
 
-#define MIN_RPM 204800 // 180 RPM
-#define MAX_RPM 614400 // 450 RPM
+#define MIN_RPM 204800 // 200 RPM
+#define MAX_RPM 614400 // 600 RPM
 
 void update_motors(void)
 {

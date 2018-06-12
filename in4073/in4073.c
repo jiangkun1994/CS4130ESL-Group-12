@@ -25,6 +25,7 @@ struct msg_pc_template *msg_pcRX;
 uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
 uint8_t calibration_flag;
+bool raw_mode_flag;
 
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
@@ -149,7 +150,7 @@ void check_connection()
 		uint32_t time_diff;
 		cur_time_us = get_time_us();
 		time_diff = cur_time_us - time_latest_packet_us;
-		if((time_diff > 600000) && cur_mode != SAFE_MODE)
+		if((time_diff > 600000) && cur_mode != SAFE_MODE && cur_mode != RAW_MODE)
 		{
 			connection = false;
 			statefunc = PANIC_MODE;
@@ -324,17 +325,34 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 
 	if(check_sensor_int_flag())
 	{
-		get_dmp_data();
-		//printf("SAMPLE number:%d\n", sample);
+		if(raw_mode_flag == true)
+		{
+			get_raw_sensor_data();
+			butterworth();
+			kalman();
 
-		// Need to check if data from DMP are junk data
-		if (CHECK_RANGE(sp, sq, sr, 5)){
 			sp_off_ = sp_off_ + sp;
 			sq_off_ = sq_off_ + sq;
 			sr_off_ = sr_off_ + sr;
 			phi_off_ = phi_off_ + phi;
 			theta_off_ = theta_off_ + theta;
 			sample++;
+			//printf("sample raw: %d\n", sample);
+		}
+		else
+		{
+			get_dmp_data();
+			//printf("dmp\n");
+			if (CHECK_RANGE(sp, sq, sr, 5))
+			{
+				sp_off_ = sp_off_ + sp;
+				sq_off_ = sq_off_ + sq;
+				sr_off_ = sr_off_ + sr;
+				phi_off_ = phi_off_ + phi;
+				theta_off_ = theta_off_ + theta;
+				sample++;
+				//printf("sample dmp: %d\n", sample);
+			}
 		}
 	}
 
@@ -368,8 +386,18 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	//check_connection();
 	if(check_sensor_int_flag())
 	{
-		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 3))); // Not sure that whether the sr should multiply a constant or not
+		if(raw_mode_flag == true)
+		{	
+			get_raw_sensor_data();
+			butterworth();
+			kalman();
+			calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + (sr << 3)));
+		}
+		else
+		{
+			get_dmp_data();
+			calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 3)));
+		}
 	}
 
 	handle_transmission_data();
@@ -428,11 +456,25 @@ void full_control_mode()
 
 	if(check_sensor_int_flag())
 	{
-		get_dmp_data();
-		calculate_rpm(lift_force,
-			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
-			p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
-			p * (yaw_moment + ((sr - sr_off) << 3)));
+		if(raw_mode_flag == true)
+		{
+			get_raw_sensor_data();
+			butterworth();
+			kalman();
+			calculate_rpm(lift_force,
+				p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
+				p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
+				p * (yaw_moment + ((sr - sr_off) << 3)));
+
+		}
+		else
+		{
+			get_dmp_data();
+			calculate_rpm(lift_force,
+				p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
+				p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
+				p * (yaw_moment + ((sr - sr_off) << 3)));
+		}
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
@@ -521,6 +563,39 @@ void full_control_mode()
 
 	//if there is a new command do the calculations
 	update_actions_full_control();
+}
+
+void raw_mode()
+{
+	cur_mode = RAW_MODE;
+
+	//indicate that you are in raw mode
+	nrf_gpio_pin_write(RED,0);
+	nrf_gpio_pin_write(YELLOW,1);
+	nrf_gpio_pin_write(GREEN,0);
+
+	pc_packet.data[0] = msg_pcRX->mode;
+	uint8_t data[2];
+	data[0] = flags;
+	data[1] = pc_packet.data[0];
+	send_ack(data);
+
+	if(raw_mode_flag == false)
+	{
+		raw_mode_flag = true;
+		imu_init(false, 500);
+		printf("RAW MODE STARTS!\n");
+	}
+	else
+	{
+		raw_mode_flag = false;
+		imu_init(true, 100);
+		printf("NOT RAW MODE NOW!\n");
+	}
+
+	//statefunc = CALIBRATION_MODE;
+	statefunc = SAFE_MODE;
+
 }
 
 void height_control_mode()
@@ -783,6 +858,9 @@ void safe_mode()
 					statefunc = FULL_CONTROL_MODE;
 				}
 				break;
+			case RAW_MODE:
+				statefunc = RAW_MODE;
+				break;
 			default:
 				//printf("Not a valid mode - DATA[0]=%d\n", pc_packet.data[0]);
 				break;
@@ -807,6 +885,7 @@ void initialize()
 	adc_request_sample();
 	//ble_init();
 	demo_done = false;
+	raw_mode_flag = false;
 	//battery = true;
 	//adc_request_sample();
 
@@ -904,6 +983,9 @@ void run_modes()
 		case FULL_CONTROL_MODE:
 			full_control_mode();
 			break;
+		case RAW_MODE:
+			raw_mode();
+			break;
 		case HEIGHT_CONTROL_MODE:
 			height_control_mode();
 			break;
@@ -934,7 +1016,7 @@ int main(void){
 		//(*statefunc)();
 		// if(check_sensor_int_flag())
 		// {
-		// 	read_baro();
+		// 	get_raw_sensor_data();
 		// }
 		run_modes();
 

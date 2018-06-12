@@ -22,6 +22,7 @@
 #include "protocol/protocol.h"
 #include <math.h>
 #include "drone.h"
+#include "filter.h"
 
 #define RED				22
 #define YELLOW		24
@@ -44,8 +45,8 @@ void run_filters_and_control();
 #define TIMER_PERIOD						50 	//50ms=20Hz (MAX 23bit, 4.6h)
 #define PANIC_MODE_PERIOD				200	//200ms
 #define TELEMETRY_TIMER_PERIOD 	500	//500ms
-#define CONNECTION_MODE_PERIOD	400 //400ms
-#define LOG_PERIOD							100	//100 ms
+#define CONNECTION_MODE_PERIOD	100000 //400ms
+#define LOG_PERIOD							1	//100 ms
 #define MIN_PANIC_LOOPS					4
 void timers_init(void);
 uint32_t get_time_us(void);

@@ -66,6 +66,8 @@ int32_t theta_off_;
 //counters to take care of exiting when communication breaks down
 extern uint32_t time_latest_packet_us, cur_time_us;
 
+extern bool raw_mode_flag;
+
 //flags indicating that there is still connection and battery
 bool connection;
 bool battery;
