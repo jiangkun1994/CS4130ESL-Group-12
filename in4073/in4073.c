@@ -194,8 +194,8 @@ void update_actions_full_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 11;
-		pitch_moment = cur_pitch << 11;
+		roll_moment = cur_roll << 8;
+		pitch_moment = cur_pitch << 8;
 		yaw_moment = cur_yaw << 8;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
@@ -338,14 +338,14 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		}
 	}
 
-	if (sample >= 150){
+	if (sample >= 500){
 		// calculate the average off set for 150 samples
 		printf("Before: %ld\n", phi_off_);
-		sp_off = (int16_t)(sp_off_ / 150);
-		sq_off = (int16_t)(sq_off_ / 150);
-		sr_off = (int16_t)(sr_off_ / 150);
-		phi_off = (int16_t)(phi_off_ / 150);
-		theta_off = (int16_t)(theta_off_ / 150);
+		sp_off = (int16_t)(sp_off_ / 500);
+		sq_off = (int16_t)(sq_off_ / 500);
+		sr_off = (int16_t)(sr_off_ / 500);
+		phi_off = (int16_t)(phi_off_ / 500);
+		theta_off = (int16_t)(theta_off_ / 500);
 		printf("After: %d\n", phi_off);
 		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 		printf("CALIBRATION MODE FINISHED! \n");
@@ -431,7 +431,7 @@ void full_control_mode()
 		get_dmp_data();
 		calculate_rpm(lift_force,
 			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
-			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
+			p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
 			p * (yaw_moment + ((sr - sr_off) << 3)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
