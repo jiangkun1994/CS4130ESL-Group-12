@@ -336,6 +336,7 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 {
 	cur_mode = YAW_CONTROL_MODE;
 
+	//imu_init(false, 500);
 	//indicate that you are in yaw control mode
 	nrf_gpio_pin_write(RED,0);
 	nrf_gpio_pin_write(YELLOW,1);
@@ -346,6 +347,7 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
+		//get_raw_sensor_data();
 		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 3))); // Not sure that whether the sr should multiply a constant or not
 	}
 
@@ -408,7 +410,7 @@ void full_control_mode()
 		get_raw_sensor_data();
 		calculate_rpm(lift_force,
 			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
-			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
+			p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
 			p * (yaw_moment + ((sr - sr_off) << 3)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
@@ -722,7 +724,7 @@ void initialize()
 	timers_init();
 	adc_init();
 	twi_init();
-	imu_init(false, 500);
+	imu_init(true, 100);
 	baro_init();
 	spi_flash_init();
 	adc_request_sample();
@@ -855,10 +857,10 @@ int main(void){
 
 		//get to the state
 		//(*statefunc)();
-		if(check_sensor_int_flag())
-		{
-			get_raw_sensor_data();
-		}
+		// if(check_sensor_int_flag())
+		// {
+		// 	get_raw_sensor_data();
+		// }
 		if(pc_packet.logging == 1)
 			write_mission_data();
 		run_modes();        
