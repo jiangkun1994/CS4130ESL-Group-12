@@ -306,11 +306,11 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 
 	if(sample == 0)
 	{
-		sp_off = 0;
-		sq_off = 0;
-		sr_off = 0;
-		phi_off = 0;
-		theta_off = 0;
+		sp_off_ = 0;
+		sq_off_ = 0;
+		sr_off_ = 0;
+		phi_off_ = 0;
+		theta_off_ = 0;
 
 		//printf("sp_off: %d\n", sp_off);
 
@@ -329,22 +329,24 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 
 		// Need to check if data from DMP are junk data
 		if (CHECK_RANGE(sp, sq, sr, 5)){
-			sp_off = sp_off + sp;
-			sq_off = sq_off + sq;
-			sr_off = sr_off + sr;
-			phi_off = phi_off + phi;
-			theta_off = theta_off + theta;
+			sp_off_ = sp_off_ + sp;
+			sq_off_ = sq_off_ + sq;
+			sr_off_ = sr_off_ + sr;
+			phi_off_ = phi_off_ + phi;
+			theta_off_ = theta_off_ + theta;
 			sample++;
 		}
 	}
 
 	if (sample >= 150){
 		// calculate the average off set for 150 samples
-		sp_off = sp_off / 150;
-		sq_off = sq_off / 150;
-		sr_off = sr_off / 150;
-		phi_off = phi_off / 150;
-		theta_off = theta_off / 150;
+		printf("Before: %ld\n", phi_off_);
+		sp_off = (int16_t)(sp_off_ / 150);
+		sq_off = (int16_t)(sq_off_ / 150);
+		sr_off = (int16_t)(sr_off_ / 150);
+		phi_off = (int16_t)(phi_off_ / 150);
+		theta_off = (int16_t)(theta_off_ / 150);
+		printf("After: %d\n", phi_off);
 		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 		printf("CALIBRATION MODE FINISHED! \n");
 		statefunc = SAFE_MODE;
