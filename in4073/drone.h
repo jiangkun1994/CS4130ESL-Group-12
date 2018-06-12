@@ -3,7 +3,7 @@
 // int calculate_L(char roll);
 // int calculate_M(char pitch);
 // int calculate_N(char yaw);
-void calculate_rpm(int Z, int L, int M, int N);
+void calculate_rpm(int32_t Z, int32_t L, int32_t M, int32_t N);
 //void calibration_mode();
 void manual_mode();
 void safe_mode();
@@ -45,10 +45,10 @@ int8_t old_roll;
 int8_t old_yaw;
 
 //force and moments in drone
-int lift_force;
-int roll_moment;
-int pitch_moment;
-int yaw_moment;
+int32_t lift_force;
+int32_t roll_moment;
+int32_t pitch_moment;
+int32_t yaw_moment;
 
 //dc offset of gyro sensor
 int16_t sp_off;

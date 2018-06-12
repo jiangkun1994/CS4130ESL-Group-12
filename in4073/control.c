@@ -12,8 +12,8 @@
 
 #include "in4073.h"
 
-#define MIN_RPM 184320 // 180 RPM
-#define MAX_RPM 460800 // 450 RPM
+#define MIN_RPM 204800 // 180 RPM
+#define MAX_RPM 614400 // 450 RPM
 
 void update_motors(void)
 {
@@ -37,10 +37,10 @@ void run_filters_and_control()
 }
 
 //in this function calculate the values for the ae[] array makis
-void calculate_rpm(int Z, int L, int M, int N)
+void calculate_rpm(int32_t Z, int32_t L, int32_t M, int32_t N)
 {
 	// Z = lift
-	// L = row
+	// L = roll
 	// M = pitch
 	// N = yaw
 	int ae1[4],i;

@@ -164,9 +164,9 @@ void update_actions_manual_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 12;
-		pitch_moment = cur_pitch << 12;
-		yaw_moment = cur_yaw << 13;
+		roll_moment = cur_roll << 10;
+		pitch_moment = cur_pitch << 10;
+		yaw_moment = cur_yaw << 11;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -179,9 +179,9 @@ void update_actions_yaw_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 12;
-		pitch_moment = cur_pitch << 12;
-		yaw_moment = cur_yaw << 6;
+		roll_moment = cur_roll << 11;
+		pitch_moment = cur_pitch << 11;
+		yaw_moment = cur_yaw << 8;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -194,9 +194,9 @@ void update_actions_full_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 12;
-		pitch_moment = cur_pitch << 12;
-		yaw_moment = cur_yaw << 6;
+		roll_moment = cur_roll << 11;
+		pitch_moment = cur_pitch << 11;
+		yaw_moment = cur_yaw << 8;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -304,18 +304,21 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 	static uint16_t sample = 0;
 	cur_mode = CALIBRATION_MODE;
 
-	sp_off = 0;
-	sq_off = 0;
-	sr_off = 0;
-	phi_off = 0;
-	theta_off = 0;
+	if(sample == 0)
+	{
+		sp_off = 0;
+		sq_off = 0;
+		sr_off = 0;
+		phi_off = 0;
+		theta_off = 0;
 
-	//printf("sp_off: %d\n", sp_off);
+		//printf("sp_off: %d\n", sp_off);
 
-	//indicate that you are in calibration mode
-	nrf_gpio_pin_write(RED,1);
-	nrf_gpio_pin_write(YELLOW,1);
-	nrf_gpio_pin_write(GREEN,0);
+		//indicate that you are in calibration mode
+		nrf_gpio_pin_write(RED,1);
+		nrf_gpio_pin_write(YELLOW,1);
+		nrf_gpio_pin_write(GREEN,0);
+	}
 
 	handle_transmission_data();
 
@@ -364,7 +367,7 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment - (sr - sr_off))); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 3))); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
@@ -427,7 +430,7 @@ void full_control_mode()
 		calculate_rpm(lift_force,
 			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
 			p1 * (pitch_moment - (theta - theta_off)) - p2 * (sq - sq_off),
-			p * (yaw_moment - (sr - sr_off)));
+			p * (yaw_moment + ((sr - sr_off) << 3)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
@@ -927,10 +930,10 @@ int main(void){
 
 		//get to the state
 		//(*statefunc)();
-		if(check_sensor_int_flag())
-		{
-			read_baro();
-		}
+		// if(check_sensor_int_flag())
+		// {
+		// 	read_baro();
+		// }
 		run_modes();
 
 		// if(check_log_timer_flag())
