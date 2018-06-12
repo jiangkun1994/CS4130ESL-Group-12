@@ -177,7 +177,7 @@ int main(int argc, char **argv)
 									}
 									else
 										mode = rx.data[1];
-									//printf("MODE CHANGED CORRECTLY TO %d\n", rx.data[1]);
+									  // printf("MODE CHANGED CORRECTLY TO %d\n", rx.data[1]);
 								}
 								break;
 							case PACKET_TELEMETRY:

@@ -42,6 +42,14 @@ void send_ack(uint8_t *data)
 	}
 }
 
+void send_mode_ack(uint8_t mode)
+{
+	uint8_t data[2];
+	data[0] = FLAG_1;
+	data[1] = mode;
+	send_ack(data);
+}
+
 void update_telemetry_data(void)
 {
 	msg_teleTX.mode = cur_mode;
@@ -232,7 +240,8 @@ void end_mode(void)
 void height_control_mode_end(void)
 {
 	cur_mode = HEIGHT_CONTROL_MODE_END;
-	printf("End\n");
+	// printf("End\n");
+	send_mode_ack(prev_mode);
 	statefunc = prev_mode;
 }
 
@@ -512,7 +521,6 @@ void full_control_mode()
 			// Change p's?
 			prev_mode = FULL_CONTROL_MODE;
 			statefunc = HEIGHT_CONTROL_MODE;
-			printf("Full->Height\n");
 			break;
 		default:
 			//printf("Not a valid mode!!\n");
@@ -552,70 +560,13 @@ void height_control_mode()
 			break;
 		case HEIGHT_CONTROL_MODE:
 			if(cur_lift != pc_packet.data[1]){
-				printf("Cur_lift: %d\n", cur_lift);
-				printf("Received: %d\n", pc_packet.data[1]);
 				cur_lift = pc_packet.data[1];			//?
-				statefunc = prev_mode;
-				printf("Prev_mode: %d\n", prev_mode);
+				statefunc = HEIGHT_CONTROL_MODE_END;
 				break;
 			}
 			cur_pitch = pc_packet.data[2];
 			cur_roll = pc_packet.data[3];
 			cur_yaw = pc_packet.data[4];
-			if(pc_packet.p_adjust == P_YAW_UP)
-			{
-				p += 1;
-				if(p >= 127)
-				{
-					p = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P_YAW_DOWN)
-			{
-				p -= 1;
-				if(p <= 0)
-				{
-					p = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P1_ROLL_PITCH_UP)
-			{
-				p1 += 1;
-				if(p1 >= 127)
-				{
-					p1 = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P1_ROLL_PITCH_DOWN)
-			{
-				p1 -= 1;
-				if(p1 <= 0)
-				{
-					p1 = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P2_ROLL_PITCH_UP)
-			{
-				p2 += 1;
-				if(p2 >= 127)
-				{
-					p2 = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P2_ROLL_PITCH_DOWN)
-			{
-				p2 -= 1;
-				if(p2 <= 0)
-				{
-					p2 = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
 			if(pc_packet.p_adjust == P3_HEIGHT_UP)
 			{
 				p3 += 1;
@@ -637,6 +588,9 @@ void height_control_mode()
 			break;
 		case HEIGHT_CONTROL_MODE_END:
 			statefunc = HEIGHT_CONTROL_MODE_END;
+			break;
+	  case FULL_CONTROL_MODE:
+			statefunc = FULL_CONTROL_MODE;
 			break;
 		default:
 			//printf("Not a valid mode\n");
@@ -866,10 +820,7 @@ void check_battery()
 			battery = false;
 			if(statefunc != SAFE_MODE){
 				statefunc = PANIC_MODE;
-				uint8_t data[2];
-				data[0] = FLAG_1;
-				data[1] = PANIC_MODE;
-				send_ack(data); //Only if mode change, send ack
+				send_mode_ack(PANIC_MODE);
 			}
 		}
 		else if ((bat_volt > BAT_THRESHOLD) && !battery)

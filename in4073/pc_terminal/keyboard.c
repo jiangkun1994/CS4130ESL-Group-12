@@ -84,7 +84,7 @@ void kb_input(uint8_t input_key){
                 printf("The control data from kb and js are not zero!! Please press button c and check js\n");
             break;
         case SEVEN:
-        printf("Mode: %d\n", mode);
+        //printf("Mode: %d\n", mode);
               if (mode != HEIGHT_CONTROL_MODE){
                 mode = HEIGHT_CONTROL_MODE;
               }
