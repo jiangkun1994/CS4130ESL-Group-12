@@ -45,7 +45,7 @@ void run_filters_and_control();
 #define PANIC_MODE_PERIOD				200	//200ms
 #define TELEMETRY_TIMER_PERIOD 	500	//500ms
 #define CONNECTION_MODE_PERIOD	400 //400ms
-#define LOG_PERIOD							100	//100 ms
+#define LOG_PERIOD							10	//00 ms
 #define MIN_PANIC_LOOPS					4
 void timers_init(void);
 uint32_t get_time_us(void);

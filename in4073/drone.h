@@ -27,10 +27,10 @@ char cur_mode;
 char prev_mode;
 
 //p controller value
-int8_t p;
-int8_t p1;
-int8_t p2;
-int8_t p3;
+int p;
+int p1;
+int p2;
+int p3;
 
 //variable to hold current movement
 int8_t cur_lift;

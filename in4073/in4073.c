@@ -15,7 +15,7 @@
 
 #include "in4073.h"
 
-#define BAT_THRESHOLD   1050
+#define BAT_THRESHOLD   500
 //#define BAT_WARNING			501
 
 uint8_t telemetry_packet[MAX_PAYLOAD];
@@ -581,60 +581,7 @@ void height_control_mode()
 			cur_pitch = pc_packet.data[2];
 			cur_roll = pc_packet.data[3];
 			cur_yaw = pc_packet.data[4];
-			if(pc_packet.p_adjust == P_YAW_UP)
-			{
-				p += 1;
-				if(p >= 127)
-				{
-					p = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P_YAW_DOWN)
-			{
-				p -= 1;
-				if(p <= 0)
-				{
-					p = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P1_ROLL_PITCH_UP)
-			{
-				p1 += 1;
-				if(p1 >= 127)
-				{
-					p1 = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P1_ROLL_PITCH_DOWN)
-			{
-				p1 -= 1;
-				if(p1 <= 0)
-				{
-					p1 = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P2_ROLL_PITCH_UP)
-			{
-				p2 += 1;
-				if(p2 >= 127)
-				{
-					p2 = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P2_ROLL_PITCH_DOWN)
-			{
-				p2 -= 1;
-				if(p2 <= 0)
-				{
-					p2 = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
+			
 			if(pc_packet.p_adjust == P3_HEIGHT_UP)
 			{
 				p3 += 1;

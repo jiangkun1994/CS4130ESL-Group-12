@@ -36,17 +36,17 @@ uint8_t packet_from_pc[MAX_PAYLOAD];
 //unsigned int old_time, current_time;
 //pthread_mutex_t lock;
 
-#define BAT_THRESHOLD   1050
-#define BAT_WARNING		1100
+#define BAT_THRESHOLD   500
+#define BAT_WARNING		501
 
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX);
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX);
 
 /* print the input data from kb and js */
-void print_input_kb_js(){
-	printf("Control from joystick and keyboard: mode=%d, js_lift=%d, kb_lift_offset=%d, js_yaw=%d, kb_yaw_offset=%d, js_pitch=%d, kb_pitch_offset=%d, js_roll=%d, kb_roll_offset=%d",
-		mode, js_lift, kb_lift_offset, js_yaw, kb_yaw_offset, js_pitch, kb_pitch_offset, js_roll, kb_roll_offset);
-}
+// void print_input_kb_js(){
+// 	printf("Control from joystick and keyboard: mode=%d, js_lift=%d, kb_lift_offset=%d, js_yaw=%d, kb_yaw_offset=%d, js_pitch=%d, kb_pitch_offset=%d, js_roll=%d, kb_roll_offset=%d",
+// 		mode, js_lift, kb_lift_offset, js_yaw, kb_yaw_offset, js_pitch, kb_pitch_offset, js_roll, kb_roll_offset);
+// }
 
 /* sent the packet we created from pc to drone */
 void tx_packet(uint8_t *packet){
@@ -118,18 +118,32 @@ void *send_func (){
 			pthread_mutex_lock(&lock);
 			msg_pcTX.mode 	= mode;
 			pthread_mutex_unlock(&lock);
-			msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, js_lift);
+			if(read_joystick)
+			{
+				if(js_lift == 0)
+				{
+					msg_pcTX.lift = 0;
+					kb_lift_offset = 0;
+					kb_roll_offset = 0;
+					kb_pitch_offset = 0;
+					kb_yaw_offset = 0;
+				}
+				else
+					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, js_lift);
+			}
+			else
+				msg_pcTX.lift = inspect_overflow_1ift(kb_lift_offset, js_lift);
+			
 			msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, js_roll);
 			msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, js_pitch);
 			msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, js_yaw);
 			msg_pcTX.P 			= p_adjust;
 			msg_pcTX.LOGGING = logging;
 			p_adjust = 0;
-
 			create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
 			tx_packet(packet_from_pc);
 		}
-		usleep(20000); // Transmission rate 50 ms
+		usleep(20000); // Transmission rate 20 ms
 	}
 }
 

@@ -17,3 +17,30 @@ p.s. If dfu_serial complains about pyserial, you can install it with "pip instal
 Have fun and remember: Google it before asking the TAs!
 
 
+Works before exam:
+- Check if we use some lift from the keyboard, can the motors be shut down when the lift of joystick is in the lowest position. (done)
+
+- Check the maximum and minimum value for A/Z, Q/W, four arrows and four P values. (done)
+
+- Left arrow and right arrow are opposite. roll (roll, keyboard: left/right arrows, joystick: handle left/right (x)); left/right arrow: roll up/down (done)
+
+- The maximum value for P, p1, p2 and p3 are all 255, which we set the maximun value is 127. (done, change in8_t to int)
+
+
+
+TODO:
+- Check the maximum RPM and cur_lift range of lift using joystick to check the maximum RPM when we lift the throttle to the highest point.
+
+- Delete the check whether joystick exists may decrease the some small latency.
+
+- Small issue: when in safe_mode, manual_mode and yaw_control_mode, the pc terminal will show "Mode: 7" on terminal. However, in these modes, number 7 is default situation.
+
+- Raw_mode and height_control_mode (hope we can)
+
+- Profiling: whether our entire control loop time meet our budget. Our communication rate from pc to drone is 20ms which is 50Hz.
+
+- Data logging: do we need more value for data logging?
+
+- Is it possible to do a simple GUI?
+
+
