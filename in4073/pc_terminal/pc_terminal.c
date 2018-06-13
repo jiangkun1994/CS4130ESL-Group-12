@@ -135,6 +135,7 @@ void *send_func (){
 
 void *receive_func (){
 	int8_t c;
+	int8_t mode_local;
 	struct packet rx;
 	rx.status = INIT;
 	struct msg_telemetry_template *msg_teleRX;
@@ -158,16 +159,20 @@ void *receive_func (){
 						}
 						else
 						{
+							/* Seperate local variable for reading the mode, only 1 pthread_mutex_lock
+							   is now needed instead for each read*/
+							pthread_mutex_lock(&lock);
+							mode_local = mode;
+							pthread_mutex_unlock(&lock);
 
 							if (rx.data[1] == CALIBRATION_MODE){
 								pthread_mutex_lock(&lock);
 								mode = SAFE_MODE;
 								pthread_mutex_unlock(&lock);
 							}
-							else if(mode != SAFE_MODE && rx.data[1] == END_MODE){
-								pthread_mutex_lock(&lock);
+							/* Local mode used here */
+							else if(mode_local != SAFE_MODE && rx.data[1] == END_MODE){
 								mode = PANIC_MODE;
-								pthread_mutex_unlock(&lock);
 							}
 							else{
 								pthread_mutex_lock(&lock);

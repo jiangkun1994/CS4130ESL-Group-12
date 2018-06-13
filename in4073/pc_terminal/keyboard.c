@@ -124,18 +124,14 @@ void kb_input(uint8_t input_key){
             	kb_lift_offset+=1;
         	}
           timer_latency_start = mon_time_ms();
-          // if(mode == HEIGHT_CONTROL_MODE){
-          //   mode = HEIGHT_CONTROL_MODE_END;
-          // }
+
         	break;
 		case 'z':
         	if(kb_lift_offset!=-127)
         	{
             	kb_lift_offset-=1;
         	}
-          // if(mode == HEIGHT_CONTROL_MODE){
-          //   mode = HEIGHT_CONTROL_MODE_END;
-          // }
+
         	break;
 		case 'q': // yaw (yaw, keyboard: q/w, joystick: twist handle)
         	if(kb_yaw_offset!=-63)
