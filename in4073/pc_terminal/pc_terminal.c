@@ -129,7 +129,7 @@ void *send_func (){
 			create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
 			tx_packet(packet_from_pc);
 		}
-		usleep(50000);
+		usleep(10000);
 	}
 }
 
@@ -226,20 +226,9 @@ void *receive_func (){
  */
 int main(int argc, char **argv)
 {
-	// int8_t c;
-	// int8_t next_c;
-	// // uint8_t packet_from_pc[MAX_PAYLOAD];
-	// // struct packet rx;
-	// struct msg_pc_template msg_pcTX = {0};;
-	// // struct msg_telemetry_template *msg_teleRX;
-	// // struct msg_telemetry_template *msg_logRX;
-	// // rx.status = INIT;
-	//
 	pthread_t receive_thread, send_thread;
 
-
 	term_puts("\nTerminal program - Embedded Real-Time Systems\n");
-
 	js_init();
 	term_initio();
 	rs232_open();
@@ -255,116 +244,7 @@ int main(int argc, char **argv)
 	pthread_create(&send_thread, NULL, *send_func, NULL);
 
 	while(1){
-
-				// if (read_joystick)
-        // 	read_js(fd);
-				//
-        // // while ((c = term_getchar_nb()) != -1){
-        // 	// kb_input(c);
-        // 	//print_input_kb_js();
-        // // }
-				// while ((c = term_getchar_nb()) != -1){
-        // 	//printf("c: %c\n", c);
-        // 	next_c = term_getchar_nb();
-        // 	if(next_c == '['){
-        // 		//printf("Arrow\n");
-        // 		kb_input(term_getchar_nb());
-        // 	}
-        // 	else {
-        // 		//printf("Not arrow\n");
-        // 		kb_input(c);
-        // 	}
-				// }
-				//
-        // current_time = mon_time_ms();
-        // if(((current_time - old_time) > 50) && (connection_failure_flag == 0)){
-				// 	msg_pcTX.mode 	= mode;
-				// 	msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, js_lift);
-				// 	msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, js_roll);
-				// 	msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, js_pitch);
-				// 	msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, js_yaw);
-				// 	msg_pcTX.P 			= p_adjust;
-				// 	msg_pcTX.LOGGING = logging;
-				// 	p_adjust = 0;
-				//
-				// 	create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
-       	// 	tx_packet(packet_from_pc);
-				//
-				// 	old_time = current_time;
-				//
-        // }
-
-				//if ((c = rs232_getchar_nb()) != -1){
-				// c = rs232_getchar_nb();
-				// 	if (rx.status == INIT && c != HEADER_VALUE && c!= -1) {
-				// 		//printf("DATA:%d\n", c);
-				// 		term_putchar(c);
-				// 	}
-        // 	parse_packet (&rx, c);
-				//
-	      //   if (flags & FLAG_1){
-				// 		switch(rx.packet_id){
-				// 			case PACKET_ACK:
-				// 				if (rx.data[0] & FLAG_2){
-				// 					printf("NEED TO re-transmit\n");
-				// 					tx_packet(packet_from_pc);
-				// 					old_time = mon_time_ms();
-				// 				}
-				// 				else
-				// 				{
-				// 					if (rx.data[1] == CALIBRATION_MODE)
-				// 						mode = SAFE_MODE;
-				// 					else if(mode != SAFE_MODE && rx.data[1] == END_MODE){
-				// 						mode = PANIC_MODE;
-				// 					}
-				// 					else
-				// 						mode = rx.data[1];
-				//
-				// 					if (rx.data[1] == 27){
-				// 						timer_latency_stop = mon_time_ms();
-				// 						unsigned int diff = timer_latency_stop - timer_latency_start;
-				// 						printf("LATENCY = %d\n", diff);
-				// 					}
-				//
-				// 					//printf("MODE CHANGED CORRECTLY TO %d\n", rx.data[1]);
-				// 				}
-				// 				break;
-				// 			case PACKET_TELEMETRY:
-				// 				msg_teleRX = (struct msg_telemetry_template *)&rx.data[0];
-				//
-				// 				if(msg_teleRX->bat_volt < BAT_THRESHOLD)
-				// 				{
-				// 					printf("Battery voltage below threshold, entering panic mode\n");
-				// 				}
-				// 				else if(msg_teleRX->bat_volt < BAT_WARNING)
-				// 				{
-				// 					printf("Warning. Low battery.\n");
-				// 				}
-				//
-				// 				print_transmission_data(msg_teleRX);
-				//
-				// 				// printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
-				// 				// printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
-				// 				// printf("%6d %6d %6d| ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
-				// 				// printf("%6d %6d %6d| ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
-				// 				// printf("%6d %6d %6d %d %d| ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
-				// 				// printf("%4d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
-				//
-				// 				break;
-				// 		case PACKET_LOG:
-				// 			//printf("Log received\n" );
-				// 			msg_logRX = (struct msg_telemetry_template *)&rx.data[0];
-				// 			//print_transmission_data(msg_logRX);
-				// 			write_log_to_file("log-data.csv", msg_logRX);
-				// 			break;
-				// 		default:
-				// 			printf("UNDEFINED PACKET RECIEVED\n");
-				// 			break;
-				// 		}
-				// 		flags &= ~FLAG_1;
-				// 	}
-        //}
-}
+	}
 
 	term_exitio();
 	rs232_close();
