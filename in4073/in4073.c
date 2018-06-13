@@ -26,6 +26,7 @@ uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
 uint8_t calibration_flag;
 
+
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
  *------------------------------------------------------------------
@@ -122,6 +123,15 @@ void handle_transmission_data()
 						data[1] = pc_packet.data[0];
 						send_ack(data); //Only if mode change, send ack
 					}
+
+					// if (msg_pcRX-> lift != pc_packet.data[1])
+					// {
+					// 	uint8_t data_[2];
+					// 	data_[0] = flags;
+					// 	data_[1] = 27;
+					// 	send_ack(data_); //Only if mode change, send ack
+					// }
+
 					pc_packet.data[1] = msg_pcRX->lift;
 					pc_packet.data[2] = msg_pcRX->pitch;
 					pc_packet.data[3] = msg_pcRX->roll;

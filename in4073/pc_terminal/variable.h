@@ -31,6 +31,7 @@ int	axis[6];
 int	button[12];
 extern int fd;
 extern uint8_t connection_failure_flag;
+extern unsigned int timer_latency_start, timer_latency_stop;
 
 
 //struct packet mypacket;

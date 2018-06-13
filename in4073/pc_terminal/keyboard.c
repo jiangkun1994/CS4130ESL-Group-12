@@ -1,4 +1,5 @@
 #include "keyboard.h"
+#include "joystick.h"
 
 /* check whether the combining data from kb and js is overflow for roll, yaw, pitch
 * & 0x7F to make sure the first bit in every data byte is 0,
@@ -100,6 +101,7 @@ void kb_input(uint8_t input_key){
         	{
             	kb_lift_offset+=1;
         	}
+          timer_latency_start = mon_time_ms();
           // if(mode == HEIGHT_CONTROL_MODE){
           //   mode = HEIGHT_CONTROL_MODE_END;
           // }

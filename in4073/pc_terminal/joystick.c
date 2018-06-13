@@ -186,16 +186,16 @@ int read_js(int fd)
 	/* choose the mode after pressing the button*/
 	if (button[0])
 		mode = PANIC_MODE;
-	if (button[1])
-		mode = SAFE_MODE;
-	if (button[2]) // Do we need to check whether data are clear here?
-		mode = MANUAL_MODE;
-	if (button[3])
-		mode = CALIBRATION_MODE;
-	if (button[4])
-		mode = YAW_CONTROL_MODE;
-	if (button[5])
-		mode = FULL_CONTROL_MODE;
+	// if (button[1])
+	// 	mode = SAFE_MODE;
+	// if (button[2]) // Do we need to check whether data are clear here?
+	// 	mode = MANUAL_MODE;
+	// if (button[3])
+	// 	mode = CALIBRATION_MODE;
+	// if (button[4])
+	// 	mode = YAW_CONTROL_MODE;
+	// if (button[5])
+	// 	mode = FULL_CONTROL_MODE;
 
 
 	/* the data from handler */
