@@ -174,10 +174,10 @@ void update_actions_manual_control()
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
-		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 10;
-		pitch_moment = cur_pitch << 10;
-		yaw_moment = cur_yaw << 11;
+		lift_force = cur_lift << 14; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 11;
+		pitch_moment = cur_pitch << 11;
+		yaw_moment = cur_yaw << 12;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -189,10 +189,10 @@ void update_actions_yaw_control()
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
-		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 11;
-		pitch_moment = cur_pitch << 11;
-		yaw_moment = cur_yaw << 8;
+		lift_force = cur_lift << 14; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 10;
+		pitch_moment = cur_pitch << 10;
+		yaw_moment = cur_yaw << 9;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -204,10 +204,10 @@ void update_actions_full_control()
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
-		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 8;
-		pitch_moment = cur_pitch << 8;
-		yaw_moment = cur_yaw << 8;
+		lift_force = cur_lift << 14; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 9;
+		pitch_moment = cur_pitch << 9;
+		yaw_moment = cur_yaw << 9;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -388,7 +388,7 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 3))); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 4))); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
@@ -449,9 +449,9 @@ void full_control_mode()
 	{
 		get_dmp_data();
 		calculate_rpm(lift_force,
-			p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
-			p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
-			p * (yaw_moment + ((sr - sr_off) << 3)));
+			p1 * (roll_moment - (phi - phi_off)) - (p2 << 2)* (sp - sp_off),
+			p1 * (pitch_moment - (theta - theta_off)) + (p2 << 2) * (sq - sq_off),
+			p * (yaw_moment + ((sr - sr_off) << 4)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
