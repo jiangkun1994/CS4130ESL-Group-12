@@ -335,11 +335,19 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 
 	if(check_sensor_int_flag())
 	{
+		int16_t pre_phi = phi;
+		int16_t pre_theta = theta;
 		get_dmp_data();
+		//printf("dmp\n");
+
+		int16_t diff_phi = pre_phi - phi;
+		int16_t diff_theta = pre_theta - theta;
+		//printf("diff_phi: %ld, diff_theta: %ld\n", diff_phi, diff_theta);
+		//get_dmp_data();
 		//printf("SAMPLE number:%d\n", sample);
 
 		// Need to check if data from DMP are junk data
-		if (CHECK_RANGE(sp, sq, sr, 5)){
+		if (CHECK_RANGE(sp, sq, sr, 5) && CHECK_RANGE(0, diff_phi, diff_theta, 2)){
 			sp_off_ = sp_off_ + sp;
 			sq_off_ = sq_off_ + sq;
 			sr_off_ = sr_off_ + sr;
@@ -349,14 +357,14 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		}
 	}
 
-	if (sample >= 500){
+	if (sample >= 600){
 		// calculate the average off set for 150 samples
 		printf("Before: %ld\n", phi_off_);
-		sp_off = (int16_t)(sp_off_ / 500);
-		sq_off = (int16_t)(sq_off_ / 500);
-		sr_off = (int16_t)(sr_off_ / 500);
-		phi_off = (int16_t)(phi_off_ / 500);
-		theta_off = (int16_t)(theta_off_ / 500);
+		sp_off = (int16_t)(sp_off_ / 600);
+		sq_off = (int16_t)(sq_off_ / 600);
+		sr_off = (int16_t)(sr_off_ / 600);
+		phi_off = (int16_t)(phi_off_ / 600);
+		theta_off = (int16_t)(theta_off_ / 600);
 		printf("After: %d\n", phi_off);
 		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 		printf("CALIBRATION MODE FINISHED! \n");
