@@ -15,7 +15,7 @@
 
 #include "in4073.h"
 
-#define BAT_THRESHOLD   500
+#define BAT_THRESHOLD   1050
 //#define BAT_WARNING			501
 
 uint8_t telemetry_packet[MAX_PAYLOAD];
