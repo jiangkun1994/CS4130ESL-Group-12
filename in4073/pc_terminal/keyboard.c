@@ -46,10 +46,14 @@ char inspect_overflow_1ift(char offset, char js)
 void kb_input(uint8_t input_key){
 	switch(input_key){
 		case ZERO:
+      pthread_mutex_lock(&lock);
 			mode = SAFE_MODE;
+      pthread_mutex_unlock(&lock);
 			break;
 		case ONE:
+      pthread_mutex_lock(&lock);
 			mode = PANIC_MODE;
+      pthread_mutex_unlock(&lock);
 			break;
 		case TWO:
 			if (
@@ -57,12 +61,18 @@ void kb_input(uint8_t input_key){
 				inspect_overflow(kb_pitch_offset, js_pitch) == 0 &&
 				inspect_overflow(kb_roll_offset, js_roll) == 0 &&
 				inspect_overflow(kb_yaw_offset, js_yaw) == 0)
-				mode = MANUAL_MODE;
+        {
+          pthread_mutex_lock(&lock);
+  				mode = MANUAL_MODE;
+          pthread_mutex_unlock(&lock);
+        }
 			else
 				printf("The control data from kb and js are not zero!! Please press button c and check js\n");
 			break;
         case THREE:
+            pthread_mutex_lock(&lock);
             mode = CALIBRATION_MODE;
+            pthread_mutex_unlock(&lock);
             break;
         case FOUR:
             if (
@@ -70,7 +80,11 @@ void kb_input(uint8_t input_key){
                 inspect_overflow(kb_pitch_offset, js_pitch) == 0 &&
                 inspect_overflow(kb_roll_offset, js_roll) == 0 &&
                 inspect_overflow(kb_yaw_offset, js_yaw) == 0)
-                mode = YAW_CONTROL_MODE;
+                {
+                  pthread_mutex_lock(&lock);
+                  mode = YAW_CONTROL_MODE;
+                  pthread_mutex_unlock(&lock);
+                }
             else
                 printf("The control data from kb and js are not zero!! Please press button c and check js\n");
             break;
@@ -80,21 +94,29 @@ void kb_input(uint8_t input_key){
                 inspect_overflow(kb_pitch_offset, js_pitch) == 0 &&
                 inspect_overflow(kb_roll_offset, js_roll) == 0 &&
                 inspect_overflow(kb_yaw_offset, js_yaw) == 0)
-                mode = FULL_CONTROL_MODE;
+                {
+                  pthread_mutex_lock(&lock);
+                  mode = FULL_CONTROL_MODE;
+                  pthread_mutex_unlock(&lock);
+                }
             else
                 printf("The control data from kb and js are not zero!! Please press button c and check js\n");
             break;
         case SEVEN:
         printf("Mode: %d\n", mode);
+              pthread_mutex_lock(&lock);
               if (mode != HEIGHT_CONTROL_MODE){
                 mode = HEIGHT_CONTROL_MODE;
               }
               else{
                   mode = HEIGHT_CONTROL_MODE_END;
               }
+              pthread_mutex_unlock(&lock);
           break;
 		case ESC:
+      pthread_mutex_lock(&lock);
 			mode = END_MODE;
+      pthread_mutex_unlock(&lock);
 			break;
 		case 'a': // lift (engine RPM, keyboard: a/z, joystick: throttle)
         	if(kb_lift_offset!=127)

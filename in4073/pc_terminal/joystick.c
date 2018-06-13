@@ -184,8 +184,11 @@ int read_js(int fd)
 	}
 
 	/* choose the mode after pressing the button*/
-	if (button[0])
+	if (button[0]){
+    pthread_mutex_lock(&lock);
 		mode = PANIC_MODE;
+    pthread_mutex_unlock(&lock);
+  }
 	// if (button[1])
 	// 	mode = SAFE_MODE;
 	// if (button[2]) // Do we need to check whether data are clear here?

@@ -124,12 +124,12 @@ void handle_transmission_data()
 						send_ack(data); //Only if mode change, send ack
 					}
 
-					// Added for latency testing
-					if (msg_pcRX-> lift != pc_packet.data[1])
+					// Added for latency testing, remove for complete functionality
+					if (msg_pcRX-> lift > pc_packet.data[1])
 					{
 						uint8_t data_[2];
 						data_[0] = flags;
-						data_[1] = 27;
+						data_[1] = 26;
 						send_ack(data_); //Only if mode change, send ack
 					}
 

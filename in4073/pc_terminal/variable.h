@@ -1,6 +1,8 @@
 #ifndef VARIABLE_H__
 #define VARIABLE_H__
 
+#include <pthread.h>
+
 //#include "../protocol/protocol.h"
 
 char kb_yaw_offset;
@@ -29,6 +31,7 @@ extern uint8_t logging;
 
 int	axis[6];
 int	button[12];
+pthread_mutex_t lock;
 extern int fd;
 extern uint8_t connection_failure_flag;
 extern unsigned int timer_latency_start, timer_latency_stop;

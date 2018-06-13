@@ -34,7 +34,7 @@ unsigned int timer_latency_start = 0, timer_latency_stop = 0;
 
 uint8_t packet_from_pc[MAX_PAYLOAD];
 //unsigned int old_time, current_time;
-pthread_mutex_t lock;
+//pthread_mutex_t lock;
 
 #define BAT_THRESHOLD   500
 #define BAT_WARNING		501
@@ -129,7 +129,7 @@ void *send_func (){
 			create_packet(sizeof(struct msg_pc_template), PACKET_GENERAL, (uint8_t *) &msg_pcTX, packet_from_pc);
 			tx_packet(packet_from_pc);
 		}
-		usleep(10000);
+		usleep(50000); // Transmission rate 50 ms
 	}
 }
 
@@ -175,7 +175,7 @@ void *receive_func (){
 								pthread_mutex_unlock(&lock);
 							}
 
-							if (rx.data[1] == 27){
+							if (rx.data[1] == 26){
 								timer_latency_stop = mon_time_ms();
 								unsigned int diff = timer_latency_stop - timer_latency_start;
 								printf("LATENCY = %d\n", diff);
