@@ -341,9 +341,15 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		}
 		else
 		{
+			int16_t pre_phi = phi;
+			int16_t pre_theta = theta;
 			get_dmp_data();
 			//printf("dmp\n");
-			if (CHECK_RANGE(sp, sq, sr, 5))
+
+			int16_t diff_phi = pre_phi - phi;
+			int16_t diff_theta = pre_theta - theta;
+			//printf("diff_phi: %ld, diff_theta: %ld\n", diff_phi, diff_theta);
+			if (CHECK_RANGE(sp, sq, sr, 5) && CHECK_RANGE(0, diff_phi, diff_theta, 2))
 			{
 				sp_off_ = sp_off_ + sp;
 				sq_off_ = sq_off_ + sq;
@@ -356,14 +362,14 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		}
 	}
 
-	if (sample >= 500){
+	if (sample >= 600){
 		// calculate the average off set for 150 samples
 		printf("Before: %ld\n", phi_off_);
-		sp_off = (int16_t)(sp_off_ / 500);
-		sq_off = (int16_t)(sq_off_ / 500);
-		sr_off = (int16_t)(sr_off_ / 500);
-		phi_off = (int16_t)(phi_off_ / 500);
-		theta_off = (int16_t)(theta_off_ / 500);
+		sp_off = (int16_t)(sp_off_ / 600);
+		sq_off = (int16_t)(sq_off_ / 600);
+		sr_off = (int16_t)(sr_off_ / 600);
+		phi_off = (int16_t)(phi_off_ / 600);
+		theta_off = (int16_t)(theta_off_ / 600);
 		printf("After: %d\n", phi_off);
 		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 		printf("CALIBRATION MODE FINISHED! \n");
@@ -593,8 +599,9 @@ void raw_mode()
 		printf("NOT RAW MODE NOW!\n");
 	}
 
-	//statefunc = CALIBRATION_MODE;
-	statefunc = SAFE_MODE;
+	statefunc = CALIBRATION_MODE;
+	//statefunc = SAFE_MODE;
+	//nrf_delay_ms(10000);
 
 }
 
@@ -637,60 +644,6 @@ void height_control_mode()
 			cur_pitch = pc_packet.data[2];
 			cur_roll = pc_packet.data[3];
 			cur_yaw = pc_packet.data[4];
-			if(pc_packet.p_adjust == P_YAW_UP)
-			{
-				p += 1;
-				if(p >= 127)
-				{
-					p = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P_YAW_DOWN)
-			{
-				p -= 1;
-				if(p <= 0)
-				{
-					p = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P1_ROLL_PITCH_UP)
-			{
-				p1 += 1;
-				if(p1 >= 127)
-				{
-					p1 = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P1_ROLL_PITCH_DOWN)
-			{
-				p1 -= 1;
-				if(p1 <= 0)
-				{
-					p1 = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P2_ROLL_PITCH_UP)
-			{
-				p2 += 1;
-				if(p2 >= 127)
-				{
-					p2 = 127;
-				}
-				pc_packet.p_adjust = 0;
-			}
-			if(pc_packet.p_adjust == P2_ROLL_PITCH_DOWN)
-			{
-				p2 -= 1;
-				if(p2 <= 0)
-				{
-					p2 = 0;
-				}
-				pc_packet.p_adjust = 0;
-			}
 			if(pc_packet.p_adjust == P3_HEIGHT_UP)
 			{
 				p3 += 1;
