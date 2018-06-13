@@ -1,5 +1,5 @@
-#ifndef FIXED_H__
-#define FIXED_H__
+#ifndef FIXEDPOINT_H__
+#define FIXEDPOINT_H__
 
 #include <inttypes.h>
 

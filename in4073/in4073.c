@@ -331,12 +331,24 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 			butterworth();
 			kalman();
 
-			sp_off_ = sp_off_ + sp;
-			sq_off_ = sq_off_ + sq;
-			sr_off_ = sr_off_ + sr;
-			phi_off_ = phi_off_ + phi;
-			theta_off_ = theta_off_ + theta;
-			sample++;
+			int16_t pre_phi = phi;
+			int16_t pre_theta = theta;
+			//get_dmp_data();
+			//printf("dmp\n");
+
+			int16_t diff_phi = pre_phi - phi;
+			int16_t diff_theta = pre_theta - theta;
+			//printf("diff_phi: %ld, diff_theta: %ld\n", diff_phi, diff_theta);
+			if (CHECK_RANGE(sp, sq, sr, 2) && CHECK_RANGE(0, diff_phi, diff_theta, 2))
+			{
+				sp_off_ = sp_off_ + sp;
+				sq_off_ = sq_off_ + sq;
+				sr_off_ = sr_off_ + sr;
+				phi_off_ = phi_off_ + phi;
+				theta_off_ = theta_off_ + theta;
+				sample++;
+				//printf("sample dmp: %d\n", sample);
+			}
 			//printf("sample raw: %d\n", sample);
 		}
 		else
@@ -361,22 +373,59 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 			}
 		}
 	}
-
-	if (sample >= 600){
-		// calculate the average off set for 150 samples
-		printf("Before: %ld\n", phi_off_);
-		sp_off = (int16_t)(sp_off_ / 600);
-		sq_off = (int16_t)(sq_off_ / 600);
-		sr_off = (int16_t)(sr_off_ / 600);
-		phi_off = (int16_t)(phi_off_ / 600);
-		theta_off = (int16_t)(theta_off_ / 600);
-		printf("After: %d\n", phi_off);
-		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
-		printf("CALIBRATION MODE FINISHED! \n");
-		statefunc = SAFE_MODE;
-		calibration_flag = true;
-		sample = 0;
+	if(raw_mode_flag == true)
+	{
+		if (sample >= 5000)
+		{
+			// calculate the average off set for 150 samples
+			printf("Before: %ld\n", phi_off_);
+			sp_off = (int16_t)(sp_off_ / 5000);
+			sq_off = (int16_t)(sq_off_ / 5000);
+			sr_off = (int16_t)(sr_off_ / 5000);
+			phi_off = (int16_t)(phi_off_ / 5000);
+			theta_off = (int16_t)(theta_off_ / 5000);
+			printf("After: %d\n", phi_off);
+			printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
+			printf("CALIBRATION MODE FINISHED! \n");
+			statefunc = SAFE_MODE;
+			calibration_flag = true;
+			sample = 0;
+		}
 	}
+	else
+	{
+		if (sample >= 1000)
+		{
+			// calculate the average off set for 150 samples
+			printf("Before: %ld\n", phi_off_);
+			sp_off = (int16_t)(sp_off_ / 1000);
+			sq_off = (int16_t)(sq_off_ / 1000);
+			sr_off = (int16_t)(sr_off_ / 1000);
+			phi_off = (int16_t)(phi_off_ / 1000);
+			theta_off = (int16_t)(theta_off_ / 1000);
+			printf("After: %d\n", phi_off);
+			printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
+			printf("CALIBRATION MODE FINISHED! \n");
+			statefunc = SAFE_MODE;
+			calibration_flag = true;
+			sample = 0;
+		}
+	}
+	// if (sample >= 5000){
+	// 	// calculate the average off set for 150 samples
+	// 	printf("Before: %ld\n", phi_off_);
+	// 	sp_off = (int16_t)(sp_off_ / 5000);
+	// 	sq_off = (int16_t)(sq_off_ / 5000);
+	// 	sr_off = (int16_t)(sr_off_ / 5000);
+	// 	phi_off = (int16_t)(phi_off_ / 5000);
+	// 	theta_off = (int16_t)(theta_off_ / 5000);
+	// 	printf("After: %d\n", phi_off);
+	// 	printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
+	// 	printf("CALIBRATION MODE FINISHED! \n");
+	// 	statefunc = SAFE_MODE;
+	// 	calibration_flag = true;
+	// 	sample = 0;
+	// }
 }
 
 void yaw_control_mode() // also need calibration mode to read sr_off
@@ -395,8 +444,8 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 		if(raw_mode_flag == true)
 		{	
 			get_raw_sensor_data();
-			butterworth();
-			kalman();
+			//butterworth();
+			//kalman();
 			calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + (sr << 3)));
 		}
 		else
@@ -465,8 +514,8 @@ void full_control_mode()
 		if(raw_mode_flag == true)
 		{
 			get_raw_sensor_data();
-			butterworth();
-			kalman();
+			//butterworth();
+			//kalman();
 			calculate_rpm(lift_force,
 				p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
 				p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
@@ -832,7 +881,7 @@ void initialize()
 	timers_init();
 	adc_init();
 	twi_init();
-	imu_init(true, 100);
+	imu_init(false, 500);
 	baro_init();
 	spi_flash_init();
 	adc_request_sample();
@@ -967,10 +1016,12 @@ int main(void){
 
 		//get to the state
 		//(*statefunc)();
-		// if(check_sensor_int_flag())
-		// {
-		// 	get_raw_sensor_data();
-		// }
+		if(check_sensor_int_flag())
+		{
+			get_raw_sensor_data();
+		}
+		if(pc_packet.logging == 1)
+			write_mission_data();
 		run_modes();
 
 		// if(check_log_timer_flag())
