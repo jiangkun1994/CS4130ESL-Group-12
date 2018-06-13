@@ -50,8 +50,8 @@ void calculate_rpm(int32_t Z, int32_t L, int32_t M, int32_t N)
 		//calculate the square of each motor rpm
 		ae1[0] = ((Z + 2*M - N) >> 2) + MIN_RPM;
 		ae1[1] = ((Z - 2*L + N) >> 2) + MIN_RPM;
-		ae1[2] = ((Z - 2*M - N) >> 2)+ MIN_RPM;
-		ae1[3] = ((Z + 2*L + N) >> 2)+ MIN_RPM;
+		ae1[2] = ((Z - 2*M - N) >> 2) + MIN_RPM;
+		ae1[3] = ((Z + 2*L + N) >> 2) + MIN_RPM;
 
 
 		// ae1[0] = 0.25*(Z + 2*M - N); // test without min RPM
