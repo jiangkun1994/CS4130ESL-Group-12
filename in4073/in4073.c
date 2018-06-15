@@ -190,8 +190,8 @@ void update_actions_yaw_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 14; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 10;
-		pitch_moment = cur_pitch << 10;
+		roll_moment = cur_roll << 11;
+		pitch_moment = cur_pitch << 11;
 		yaw_moment = cur_yaw << 9;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
@@ -252,6 +252,8 @@ void manual_mode()
 	cur_mode = MANUAL_MODE;
 
 	//indicate that you are in manual mode
+	nrf_gpio_pin_write(GREEN,1);
+	nrf_gpio_pin_write(BLUE,1);
 	nrf_gpio_pin_write(RED,1);
 	nrf_gpio_pin_write(YELLOW,0);
 
@@ -261,8 +263,8 @@ void manual_mode()
 	//read the new messages to come
 	handle_transmission_data();
 	//printf("PK_manual|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
-	if(pc_packet.logging == 1)
-		write_mission_data();
+	// if(pc_packet.logging == 1)
+	// 	write_mission_data();
 
 	switch (pc_packet.data[0])
 	{
@@ -328,7 +330,8 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		//indicate that you are in calibration mode
 		nrf_gpio_pin_write(RED,1);
 		nrf_gpio_pin_write(YELLOW,1);
-		nrf_gpio_pin_write(GREEN,0);
+		nrf_gpio_pin_write(GREEN,1);
+		nrf_gpio_pin_write(BLUE,0);
 	}
 
 	handle_transmission_data();
@@ -358,7 +361,7 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 	}
 
 	if (sample >= 600){
-		// calculate the average off set for 150 samples
+		// calculate the average off set for 600 samples
 		printf("Before: %ld\n", phi_off_);
 		sp_off = (int16_t)(sp_off_ / 600);
 		sq_off = (int16_t)(sq_off_ / 600);
@@ -379,8 +382,9 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	cur_mode = YAW_CONTROL_MODE;
 
 	//indicate that you are in yaw control mode
-	nrf_gpio_pin_write(RED,0);
-	nrf_gpio_pin_write(YELLOW,1);
+	nrf_gpio_pin_write(RED,1);
+	nrf_gpio_pin_write(BLUE,1);
+	nrf_gpio_pin_write(YELLOW,0);
 	nrf_gpio_pin_write(GREEN,0);
 
 
@@ -388,13 +392,13 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
-		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + ((sr - sr_off) << 4))); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(lift_force, roll_moment, pitch_moment, p * (yaw_moment + (sr << 4))); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
 
-	if(pc_packet.logging == 1)
-		write_mission_data();
+	// if(pc_packet.logging == 1)
+	// 	write_mission_data();
 
 
 	switch (pc_packet.data[0])
@@ -442,7 +446,8 @@ void full_control_mode()
 
 	//indicate that you are in full control mode
 	nrf_gpio_pin_write(RED,1);
-	nrf_gpio_pin_write(YELLOW,0); // yellow and gree lights are on
+	nrf_gpio_pin_write(YELLOW,1);
+	nrf_gpio_pin_write(BLUE,0); // yellow and gree lights are on
 	nrf_gpio_pin_write(GREEN,0);
 
 	if(check_sensor_int_flag())
@@ -456,8 +461,8 @@ void full_control_mode()
 
 	handle_transmission_data();
 
-	if(pc_packet.logging == 1)
-		write_mission_data();
+	// if(pc_packet.logging == 1)
+	// 	write_mission_data();
 
 	switch(pc_packet.data[0])
 	{
@@ -623,7 +628,9 @@ void panic_mode()
 
 	//indicate that you are in panic mode
 	nrf_gpio_pin_write(RED,0);
-	nrf_gpio_pin_write(YELLOW,0);
+	nrf_gpio_pin_write(YELLOW,1);
+	nrf_gpio_pin_write(BLUE,1);
+	nrf_gpio_pin_write(GREEN,1);
 
 	if (check_panic_mode_timer_flag())
 	{
@@ -637,6 +644,11 @@ void panic_mode()
 			ae[1] -= 10;
 			ae[2] -= 10;
 			ae[3] -= 10;
+			for(int i=0;i<4;i++) //  to prevent the negative value for RPM
+			{
+				if(ae[i] <= 0)
+					ae[i] = 0;
+			}
 			run_filters_and_control();
 			//nrf_delay_ms(200);
 			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
@@ -684,6 +696,7 @@ void safe_mode()
 	// indicate that your connection is broken
 	if(connection == false)
 	{
+		nrf_gpio_pin_write(BLUE,0);
 		nrf_gpio_pin_write(RED,0);
 		nrf_gpio_pin_write(YELLOW,0);
 		nrf_gpio_pin_write(GREEN,0);
@@ -691,9 +704,10 @@ void safe_mode()
 	else
 	{
 		// indicate that you are in safe mode
-		nrf_gpio_pin_write(RED,0);
+		nrf_gpio_pin_write(BLUE,1);
+		nrf_gpio_pin_write(RED,1);
 		nrf_gpio_pin_write(YELLOW,1);
-		nrf_gpio_pin_write(GREEN,1);
+		nrf_gpio_pin_write(GREEN,0);
 	}
 
 	//motors are shut down
@@ -902,6 +916,9 @@ int main(void){
 		// {
 		// 	read_baro();
 		// }
+		if(pc_packet.logging == 1)
+			write_mission_data();
+		
 		run_modes();
 
 		// if(check_log_timer_flag())
