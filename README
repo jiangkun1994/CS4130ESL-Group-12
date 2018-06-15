@@ -33,7 +33,7 @@ TODO:
 
 - Delete the check whether joystick exists may decrease the some small latency.
 
-- Small issue: when in safe_mode, manual_mode and yaw_control_mode, the pc terminal will show "Mode: 7" on terminal. However, in these modes, number 7 is default situation.
+- Small issue: when in safe_mode, manual_mode and yaw_control_mode, after pressing the button "7" the pc terminal will show "Mode: 7" on terminal. However, in these modes, number 7 is default situation.
 
 - Raw_mode and height_control_mode (hope we can)
 
