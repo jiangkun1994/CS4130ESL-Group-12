@@ -87,13 +87,15 @@ void kb_input(uint8_t input_key){
                 printf("The control data from kb and js are not zero!! Please press button c and check js\n");
             break;
         case SEVEN:
-        printf("Mode: %d\n", mode);
-              if (mode != HEIGHT_CONTROL_MODE){
-                mode = HEIGHT_CONTROL_MODE;
-              }
-              else{
-                  mode = HEIGHT_CONTROL_MODE_END;
-              }
+            //printf("Mode: %d\n", mode);
+            mode = HEIGHT_CONTROL_MODE;
+            printf("Mode: %d\n", mode);
+              // if (mode != HEIGHT_CONTROL_MODE){
+              //   mode = HEIGHT_CONTROL_MODE;
+              // }
+              // else{
+              //     mode = HEIGHT_CONTROL_MODE_END;
+              // }
           break;
 		case ESC:
 			mode = END_MODE;
@@ -108,7 +110,7 @@ void kb_input(uint8_t input_key){
           // }
         	break;
 		case 'z':
-        	if(kb_lift_offset!=-127)
+        	if(kb_lift_offset!=0)
         	{
             	kb_lift_offset-=1;
         	}

@@ -133,7 +133,6 @@ int main(int argc, char **argv)
         		kb_input(c);
         	}
 				}
-
         current_time = mon_time_ms();
         if(((current_time - old_time) > 10) && (connection_failure_flag == 0)){
 					msg_pcTX.mode 	= mode;
@@ -149,6 +148,7 @@ int main(int argc, char **argv)
        				tx_packet(packet_from_pc);
 
 					old_time = current_time;
+
 
         }
 
@@ -175,6 +175,12 @@ int main(int argc, char **argv)
 									else if(rx.data[1] == RAW_MODE)
 									{
 										mode = CALIBRATION_MODE;
+										printf("Ack received\n");
+									}
+									else if(rx.data[1] == HEIGHT_CONTROL_MODE && rx.data[2] == 1)
+									{
+										mode = FULL_CONTROL_MODE;
+										msg_pcTX.mode = FULL_CONTROL_MODE;
 										printf("Ack received\n");
 									}
 									else if(mode != SAFE_MODE && rx.data[1] == END_MODE){

@@ -26,6 +26,7 @@ uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
 uint8_t calibration_flag;
 bool raw_mode_flag;
+bool height_control_flag;
 
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
@@ -118,9 +119,10 @@ void handle_transmission_data()
 					if (msg_pcRX-> mode != pc_packet.data[0])
 					{
 						pc_packet.data[0] = msg_pcRX->mode;
-						uint8_t data[2];
+						uint8_t data[3];
 						data[0] = flags;
 						data[1] = pc_packet.data[0];
+						data[2] = 1;
 						send_ack(data); //Only if mode change, send ack
 					}
 					pc_packet.data[1] = msg_pcRX->lift;
@@ -517,25 +519,25 @@ void full_control_mode()
 			//butterworth();
 			//kalman();
 			calculate_rpm(lift_force,
-				p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
-				p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
-				p * (yaw_moment + ((sr - sr_off) << 3)));
+				p1 * (roll_moment - (phi - phi_off)) - (p2 << 2) * (sp - sp_off),
+				p1 * (pitch_moment - (theta - theta_off)) + (p2 << 2) * (sq - sq_off),
+				p * (yaw_moment + ((sr - sr_off) << 4)));
 
 		}
 		else
 		{
 			get_dmp_data();
 			calculate_rpm(lift_force,
-				p1 * (roll_moment - (phi - phi_off)) - p2 * (sp - sp_off),
-				p1 * (pitch_moment - (theta - theta_off)) + p2 * (sq - sq_off),
-				p * (yaw_moment + ((sr - sr_off) << 3)));
+				p1 * (roll_moment - (phi - phi_off)) - (p2 << 2) * (sp - sp_off),
+				p1 * (pitch_moment - (theta - theta_off)) + (p2 << 2) * (sq - sq_off),
+				p * (yaw_moment + ((sr - sr_off) << 4)));
 		}
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
 
-	if(pc_packet.logging == 1)
-		write_mission_data();
+	// if(pc_packet.logging == 1)
+	// 	write_mission_data();
 
 	switch(pc_packet.data[0])
 	{
@@ -607,7 +609,7 @@ void full_control_mode()
 			break;
 		case HEIGHT_CONTROL_MODE:
 			// Change p's?
-			prev_mode = FULL_CONTROL_MODE;
+			//prev_mode = FULL_CONTROL_MODE;
 			statefunc = HEIGHT_CONTROL_MODE;
 			printf("Full->Height\n");
 			break;
@@ -629,11 +631,13 @@ void raw_mode()
 	nrf_gpio_pin_write(YELLOW,1);
 	nrf_gpio_pin_write(GREEN,0);
 
-	pc_packet.data[0] = msg_pcRX->mode;
-	uint8_t data[2];
-	data[0] = flags;
-	data[1] = pc_packet.data[0];
-	send_ack(data);
+	handle_transmission_data();
+
+	// pc_packet.data[0] = msg_pcRX->mode;
+	// uint8_t data[2];
+	// data[0] = flags;
+	// data[1] = pc_packet.data[0];
+	// send_ack(data);
 
 	if(raw_mode_flag == false)
 	{
@@ -667,14 +671,23 @@ void height_control_mode()
 	if(check_sensor_int_flag())
 	{
 		read_baro();
-		calculate_rpm(p3 * (lift_force + (pressure << 1)), roll_moment, pitch_moment, yaw_moment); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(p3 * (lift_force + (pressure << 1)), 0, 0, 0); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
 
-	if(pc_packet.logging == 1)
-		write_mission_data();
-
+	// if(pc_packet.logging == 1)
+	// 	write_mission_data();
+	// if(check_connection_timer_flag())
+	// {
+	// 	printf("pc_packet.data[0]: %d\n", pc_packet.data[0]);
+	// 	clear_connection_timer_flag();
+	// }
+	if(check_connection_timer_flag())
+	{
+		printf("pc_packet.data[0]: %d\n", pc_packet.data[0]);
+		clear_connection_timer_flag();
+	}
 	switch (pc_packet.data[0])
 	{
 		case PANIC_MODE:
@@ -682,35 +695,80 @@ void height_control_mode()
 			statefunc = PANIC_MODE;
 			break;
 		case HEIGHT_CONTROL_MODE:
-			if(cur_lift != pc_packet.data[1]){
-				printf("Cur_lift: %d\n", cur_lift);
-				printf("Received: %d\n", pc_packet.data[1]);
-				cur_lift = pc_packet.data[1];			//?
-				statefunc = prev_mode;
-				printf("Prev_mode: %d\n", prev_mode);
-				break;
-			}
-			cur_pitch = pc_packet.data[2];
-			cur_roll = pc_packet.data[3];
-			cur_yaw = pc_packet.data[4];
-			if(pc_packet.p_adjust == P3_HEIGHT_UP)
+			cur_lift = pc_packet.data[1];
+			if(old_lift != cur_lift)
 			{
-				p3 += 1;
-				if(p3 >= 127)
-				{
-					p3 = 127;
-				}
-				pc_packet.p_adjust = 0;
+				
+
+				printf("DIFFERENT!!!\n");
+				//pc_packet.data[0] = msg_pcRX->mode;
+				// uint8_t data[3];
+				// data[0] = flags;
+				// data[1] = pc_packet.data[0];
+				// data[2] = 1;
+				// send_ack(data);
+				// nrf_delay_ms(50);
+				statefunc = FULL_CONTROL_MODE;
 			}
-			else if(pc_packet.p_adjust == P3_HEIGHT_DOWN)
-			{
-				p3 -= 1;
-				if(p3 <= 0)
+			//cur_lift = pc_packet.data[1];
+			//if(old_lift != cur_lift)
+			//{
+				//printf("Cur_lift: %d\n", cur_lift);
+				//printf("Received: %d\n", pc_packet.data[1]);
+				//cur_lift = pc_packet.data[1];
+				// pc_packet.data[0] = msg_pcRX->mode;
+				// uint8_t data[2];
+				// data[0] = flags;
+				// data[1] = pc_packet.data[0];
+				// send_ack(data);			//?
+				// statefunc = FULL_CONTROL_MODE;
+				//pc_packet.data[0] = FULL_CONTROL_MODE;
+				//msg_pcRX->mode = FULL_CONTROL_MODE; 
+				//printf("Prev_mode: %d\n", prev_mode);
+				//break;
+			//}
+			//else
+			//{
+				if(pc_packet.p_adjust == P3_HEIGHT_UP)
 				{
-					p3 = 0;
+					p3 += 1;
+					if(p3 >= 127)
+					{
+						p3 = 127;
+					}
+					pc_packet.p_adjust = 0;
 				}
-				pc_packet.p_adjust = 0;
-			}
+				else if(pc_packet.p_adjust == P3_HEIGHT_DOWN)
+				{
+					p3 -= 1;
+					if(p3 <= 0)
+					{
+						p3 = 0;
+					}
+					pc_packet.p_adjust = 0;
+				}
+			//}
+			// cur_pitch = pc_packet.data[2];
+			// cur_roll = pc_packet.data[3];
+			// cur_yaw = pc_packet.data[4];
+			// if(pc_packet.p_adjust == P3_HEIGHT_UP)
+			// {
+			// 	p3 += 1;
+			// 	if(p3 >= 127)
+			// 	{
+			// 		p3 = 127;
+			// 	}
+			// 	pc_packet.p_adjust = 0;
+			// }
+			// else if(pc_packet.p_adjust == P3_HEIGHT_DOWN)
+			// {
+			// 	p3 -= 1;
+			// 	if(p3 <= 0)
+			// 	{
+			// 		p3 = 0;
+			// 	}
+			// 	pc_packet.p_adjust = 0;
+			// }
 			break;
 		case HEIGHT_CONTROL_MODE_END:
 			statefunc = HEIGHT_CONTROL_MODE_END;
@@ -721,7 +779,7 @@ void height_control_mode()
 	}
 
 	//if there is a new command do the calculations
-	update_actions_height_control();
+	//update_actions_height_control();
 }
 
 //panic mode state makis
