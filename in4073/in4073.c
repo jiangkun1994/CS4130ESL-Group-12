@@ -209,10 +209,10 @@ void update_actions_height_control()
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
-		lift_force = cur_lift << 13; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 12;
-		pitch_moment = cur_pitch << 12;
-		yaw_moment = cur_yaw << 13;
+		lift_force = cur_lift << 11; // test them on drone to find the suitable parameters
+		roll_moment = cur_roll << 11;
+		pitch_moment = cur_pitch << 11;
+		yaw_moment = cur_yaw << 11;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
 		old_pitch = cur_pitch;
@@ -667,7 +667,7 @@ void height_control_mode()
 	if(check_sensor_int_flag())
 	{
 		read_baro();
-		calculate_rpm(p3 * (lift_force - pressure), roll_moment, pitch_moment, yaw_moment); // Not sure that whether the sr should multiply a constant or not
+		calculate_rpm(p3 * (lift_force + (pressure << 1)), roll_moment, pitch_moment, yaw_moment); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
@@ -881,7 +881,7 @@ void initialize()
 	timers_init();
 	adc_init();
 	twi_init();
-	imu_init(false, 500);
+	imu_init(true, 100);
 	baro_init();
 	spi_flash_init();
 	adc_request_sample();
@@ -1016,10 +1016,10 @@ int main(void){
 
 		//get to the state
 		//(*statefunc)();
-		if(check_sensor_int_flag())
-		{
-			get_raw_sensor_data();
-		}
+		// if(check_sensor_int_flag())
+		// {
+		// 	get_raw_sensor_data();
+		// }
 		if(pc_packet.logging == 1)
 			write_mission_data();
 		run_modes();
