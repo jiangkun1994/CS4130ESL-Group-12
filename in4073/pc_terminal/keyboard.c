@@ -127,7 +127,7 @@ void kb_input(uint8_t input_key){
 
         	break;
 		case 'z':
-        	if(kb_lift_offset!=0)
+        	if(kb_lift_offset!=-127)
         	{
             	kb_lift_offset-=1;
         	}
