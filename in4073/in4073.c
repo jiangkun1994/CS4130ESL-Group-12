@@ -190,8 +190,8 @@ void update_actions_yaw_control()
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
 		lift_force = cur_lift << 14; // test them on drone to find the suitable parameters
-		roll_moment = cur_roll << 10;
-		pitch_moment = cur_pitch << 10;
+		roll_moment = cur_roll << 11;
+		pitch_moment = cur_pitch << 11;
 		yaw_moment = cur_yaw << 9;
 		old_lift = cur_lift;
 		old_roll = cur_roll;
@@ -449,7 +449,7 @@ void full_control_mode()
 	{
 		get_dmp_data();
 		calculate_rpm(lift_force,
-			p1 * (roll_moment - (phi - phi_off)) - (p2 << 2)* (sp - sp_off),
+			p1 * (roll_moment - (phi - phi_off)) - (p2 << 2) * (sp - sp_off),
 			p1 * (pitch_moment - (theta - theta_off)) + (p2 << 2) * (sq - sq_off),
 			p * (yaw_moment + ((sr - sr_off) << 4)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
