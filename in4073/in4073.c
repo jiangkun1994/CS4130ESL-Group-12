@@ -454,7 +454,7 @@ void full_control_mode()
 	{
 		get_dmp_data();
 		calculate_rpm(lift_force,
-			p1 * (roll_moment - (phi - phi_off)) - (p2 << 2)* (sp - sp_off),
+			p1 * (roll_moment - (phi - phi_off)) - (p2 << 2) * (sp - sp_off),
 			p1 * (pitch_moment - (theta - theta_off)) + (p2 << 2) * (sq - sq_off),
 			p * (yaw_moment + ((sr - sr_off) << 4)));
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))

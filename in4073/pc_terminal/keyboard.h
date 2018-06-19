@@ -39,6 +39,6 @@
 /* functions in keyboard.c */
 void kb_input(uint8_t input_key);
 char inspect_overflow(char offset, char js);
-char inspect_overflow_1ift(char offset, char js);
+char inspect_overflow_lift(char offset, char js);
 
 #endif
