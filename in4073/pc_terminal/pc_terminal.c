@@ -36,8 +36,8 @@ uint8_t packet_from_pc[MAX_PAYLOAD];
 //unsigned int old_time, current_time;
 //pthread_mutex_t lock;
 
-#define BAT_THRESHOLD   500
-#define BAT_WARNING		501
+#define BAT_THRESHOLD   1050
+#define BAT_WARNING		1100
 
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX);
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX);
