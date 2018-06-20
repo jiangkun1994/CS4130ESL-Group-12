@@ -116,10 +116,10 @@ void *send_func (){
 					kb_yaw_offset = 0;
 				}
 				else
-					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, js_lift);
+					msg_pcTX.lift 	= inspect_overflow_lift(kb_lift_offset, js_lift);
 			}
 			else
-			msg_pcTX.lift = inspect_overflow_1ift(kb_lift_offset, js_lift);
+			msg_pcTX.lift = inspect_overflow_lift(kb_lift_offset, js_lift);
 
 			msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, js_roll);
 			msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, js_pitch);
