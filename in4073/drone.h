@@ -27,10 +27,10 @@ char cur_mode;
 char prev_mode;
 
 //p controller value
-unsigned char p;
-unsigned char p1;
-unsigned char p2;
-unsigned char p3;
+int16_t p;
+int16_t p1;
+int16_t p2;
+int16_t p3;
 
 //variable to hold current movement
 int8_t cur_lift;
