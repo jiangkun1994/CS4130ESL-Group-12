@@ -21,10 +21,19 @@ void update_motors(void)
 	// NRF_TIMER1->CC[1] = 1000 + ae[1];
 	// NRF_TIMER1->CC[2] = 1000 + ae[2];
 	// NRF_TIMER1->CC[3] = 1000 + ae[3];
+
+	// if(motor[0] < ae[0])
+	// {
+	// 	uint8_t data_[2];
+	// 	data_[0] = flags;
+	// 	data_[1] = 26;
+	// 	send_ack(data_); //Only if mode change, send ack
+	// }
 	motor[0] = ae[0];
 	motor[1] = ae[1];
 	motor[2] = ae[2];
 	motor[3] = ae[3];
+
 }
 
 void run_filters_and_control()

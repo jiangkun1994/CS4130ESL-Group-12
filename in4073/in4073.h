@@ -134,5 +134,7 @@ void read_mission_data(void);
 //bool delete_mission_data(void);
 void update_telemetry_data(void);
 
+void send_ack(uint8_t *data);
+
 
 #endif // IN4073_H__

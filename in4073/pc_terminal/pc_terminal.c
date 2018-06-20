@@ -184,6 +184,12 @@ void *receive_func (){
 								mode = SAFE_MODE;
 								pthread_mutex_unlock(&lock);
 							}
+
+							else if (rx.data[1] == 26){
+								timer_latency_stop = mon_time_ms();
+								unsigned int diff = timer_latency_stop - timer_latency_start;
+								printf("LATENCY = %d\n", diff);
+							}
 							/* Local mode used here */
 							else if(mode_local != SAFE_MODE && rx.data[1] == END_MODE){
 								mode = PANIC_MODE;
@@ -192,12 +198,6 @@ void *receive_func (){
 								pthread_mutex_lock(&lock);
 								mode = rx.data[1];
 								pthread_mutex_unlock(&lock);
-							}
-
-							if (rx.data[1] == 26){
-								timer_latency_stop = mon_time_ms();
-								unsigned int diff = timer_latency_stop - timer_latency_start;
-								printf("LATENCY = %d\n", diff);
 							}
 
 							//printf("MODE CHANGED CORRECTLY TO %d\n", rx.data[1]);
