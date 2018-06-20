@@ -47,6 +47,7 @@ void run_filters_and_control();
 #define CONNECTION_MODE_PERIOD	400 //400ms
 #define LOG_PERIOD							10	//10 ms
 #define MIN_PANIC_LOOPS					4
+
 void timers_init(void);
 uint32_t get_time_us(void);
 bool check_timer_flag(void);
@@ -69,8 +70,9 @@ void gpio_init(void);
 typedef struct {
 	uint8_t Data[QUEUE_SIZE];
 	uint16_t first,last;
-  	uint16_t count;
+  uint16_t count;
 } queue;
+
 void init_queue(queue *q);
 void enqueue(queue *q, char x);
 char dequeue(queue *q);
@@ -131,7 +133,6 @@ void ble_send(void);
 // Testing
 void write_mission_data(void);
 void read_mission_data(void);
-//bool delete_mission_data(void);
 void update_telemetry_data(void);
 
 

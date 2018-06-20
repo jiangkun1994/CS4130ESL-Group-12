@@ -1,26 +1,7 @@
-//declare functions
-// int calculate_Z(char lift);
-// int calculate_L(char roll);
-// int calculate_M(char pitch);
-// int calculate_N(char yaw);
 void calculate_rpm(int32_t Z, int32_t L, int32_t M, int32_t N);
-//void calibration_mode();
-void manual_mode();
-void safe_mode();
-void panic_mode();
-void calibration_mode();
-void yaw_control_mode();
-void full_control_mode();
-void height_control_mode();
-void height_control_mode_end(void);
-void end_mode(void);
-//void check_connection();
-//void process_input();
 
 //state pointer
-//void (*statefunc)();
 uint8_t statefunc;
-//void (*setmode)();
 
 //variable to hold current mode
 char cur_mode;
@@ -64,7 +45,7 @@ int32_t phi_off_;
 int32_t theta_off_;
 
 //counters to take care of exiting when communication breaks down
-extern uint32_t time_latest_packet_us, cur_time_us;
+//extern uint32_t time_latest_packet_us, cur_time_us;
 
 //flags indicating that there is still connection and battery
 bool connection;

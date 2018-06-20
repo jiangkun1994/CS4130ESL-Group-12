@@ -25,7 +25,7 @@ void mon_delay_ms(unsigned int ms)
         assert(nanosleep(&req,&rem) == 0);
 }
 
-
+/* Kun Jiang */
 char js_scale_values(int axis){
 	char scale_axis;
 	int PreRange = 65535;
@@ -45,6 +45,7 @@ char js_scale_values(int axis){
 	return scale_axis;
 }
 
+/* Kun Jiang */
 char js_scale_values_lift(int axis){
 	char scale_axis;
 	int PreRange = 65535;
@@ -64,45 +65,25 @@ char js_scale_values_lift(int axis){
 	return scale_axis;
 }
 
-
+/* Kun Jiang */
 void js_give_packet(char action, char value){
 	switch(action){
 		case LIFT:
-		js_lift = value;
-		//printf("LIFT: %d\n", js_lift);
+		  js_lift = value;
 		break;
 		case PITCH:
-		js_pitch = value;
-		//printf("PITCH: %d\n", js_pitch);
+		  js_pitch = value;
 		break;
 		case ROLL:
-		js_roll = value;
-		//printf("ROLL: %d\n", js_roll);
+		  js_roll = value;
 		break;
 		case YAW:
-		js_yaw = value;
-		//printf("YAW: %d\n", js_yaw);
+		  js_yaw = value;
 		break;
 	}
 }
 
-// void set_js_packet(char action, int axis, int divisor){
-// 	float throttle = 0;
-// 	float amplifier = 127;
-// 	char give_value;
-//
-// 	throttle = (axis + (divisor / 2)) / divisor;
-//
-// 	if(throttle > 1000)
-// 		throttle = 1000;
-// 	else if(throttle < -1000)
-// 		throttle = -1000;
-//
-// 	give_value = throttle / 1000.0 * amplifier;
-// 	js_give_packet(action, give_value);
-//
-// }
-
+/* Kun Jiang */
 void set_js_packet(char action, int axis){
 	char give_value;
 	give_value = js_scale_values(axis);
@@ -110,6 +91,7 @@ void set_js_packet(char action, int axis){
 
 }
 
+/* Kun Jiang */
 void set_js_packet_lift(char action, unsigned int axis){
 	char give_value;
 	give_value = js_scale_values_lift(axis);
@@ -118,35 +100,14 @@ void set_js_packet_lift(char action, unsigned int axis){
 }
 
 
-//#define JS_DEV	"/dev/input/js0"
-
 void js_init(){
 	if ((fd = open(JS_DEV, O_RDONLY)) < 0) {
-		//perror("jstest");
-    //exit(1);
-    // printf("NO JOYSTICK FOUND, DO YOU WANT TO RUN IN KEYBOARD MODE ONLY [y/n]: ");
-    // char r;
-    // r = getchar();
-    // while(r != 'n' && r != 'N' && r != 'y' && r != 'Y')
-    // {
-    //   printf("invalid input, enter the choice(y/Y/n/N) again : ");
-    //   r = getchar();
-    //   if (r == '\n') r = getchar();
-    // }
-    //
-    // if (r == 'n' || r == 'N'){
-    //   printf("EXITING PROGRAM\n");
-    //   exit(1);
-    // }
-    // else if (r == 'y'|| r == 'Y')
-    // {
       read_joystick = false;
       js_lift = 0;
       js_roll = 0;
       js_pitch = 0;
       js_yaw = 0;
       printf("NO JOYSTICK FOUND, RUNING PROGRAM IN KEYBOARD MODE ONLY\n");
-    //}
 	}
 
 	/* non-blocking mode
@@ -154,13 +115,12 @@ void js_init(){
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 }
 
+/* Modified by Kun Jiang */
 /* read the data from joystick (button or handler) */
 int read_js(int fd)
 {
-	//int 		fd;
 	struct js_event js;
 	unsigned int total;
-	//int cc;
 
 	/* check up on JS
 	 */
@@ -168,7 +128,6 @@ int read_js(int fd)
 
 		/* register data
 		 */
-		// fprintf(stderr,".");
 		switch(js.type & ~JS_EVENT_INIT) {
 			case JS_EVENT_BUTTON:
 				button[js.number] = js.value;
@@ -189,17 +148,6 @@ int read_js(int fd)
 		mode = PANIC_MODE;
     pthread_mutex_unlock(&lock);
   }
-	// if (button[1])
-	// 	mode = SAFE_MODE;
-	// if (button[2]) // Do we need to check whether data are clear here?
-	// 	mode = MANUAL_MODE;
-	// if (button[3])
-	// 	mode = CALIBRATION_MODE;
-	// if (button[4])
-	// 	mode = YAW_CONTROL_MODE;
-	// if (button[5])
-	// 	mode = FULL_CONTROL_MODE;
-
 
 	/* the data from handler */
 	// roll
@@ -210,8 +158,6 @@ int read_js(int fd)
 		set_js_packet(ROLL, 0);
 	}
 
-	//set_js_packet(ROLL, axis[0]);
-
 	// pitch
 	if(axis[1] < -JS_MIN_VALUE || axis[1] > JS_MIN_VALUE){
 		set_js_packet(PITCH, axis[1]);
@@ -219,8 +165,6 @@ int read_js(int fd)
 	else{
 		set_js_packet(PITCH, 0);
 	}
-
-	//set_js_packet(PITCH, axis[1]);
 
 	// yaw
 	if(axis[2] < -JS_MIN_VALUE || axis[2] > JS_MIN_VALUE){
@@ -230,11 +174,8 @@ int read_js(int fd)
 		set_js_packet(YAW, 0);
 	}
 
-	//set_js_packet(YAW, axis[2]);
-
 	// lift
 	total = 65534 - (axis[3] + 32767);
-	//cc = total / 2 ;
     if (total > JS_MIN_VALUE)
     {
         set_js_packet_lift(LIFT, total);
@@ -243,9 +184,5 @@ int read_js(int fd)
     {
         set_js_packet_lift(LIFT, 0);
     }
-
-    //set_js_packet(LIFT, axis[3]);
-
-
     return 0;
 }

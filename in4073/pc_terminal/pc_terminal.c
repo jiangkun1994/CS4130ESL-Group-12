@@ -33,21 +33,14 @@ uint8_t logging = 0;
 unsigned int timer_latency_start = 0, timer_latency_stop = 0;
 
 uint8_t packet_from_pc[MAX_PAYLOAD];
-//unsigned int old_time, current_time;
-//pthread_mutex_t lock;
 
-#define BAT_THRESHOLD   500
-#define BAT_WARNING		501
+#define BAT_THRESHOLD   1050
+#define BAT_WARNING			1100
 
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX);
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX);
 
-/* print the input data from kb and js */
-// void print_input_kb_js(){
-// 	printf("Control from joystick and keyboard: mode=%d, js_lift=%d, kb_lift_offset=%d, js_yaw=%d, kb_yaw_offset=%d, js_pitch=%d, kb_pitch_offset=%d, js_roll=%d, kb_roll_offset=%d",
-// 		mode, js_lift, kb_lift_offset, js_yaw, kb_yaw_offset, js_pitch, kb_pitch_offset, js_roll, kb_roll_offset);
-// }
-
+/* Randy Prozée */
 /* sent the packet we created from pc to drone */
 void tx_packet(uint8_t *packet){
 	int i = 0;
@@ -57,10 +50,9 @@ void tx_packet(uint8_t *packet){
  }
 }
 
-// Argument types?
+/* Eline Stenwig */
 void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX)
 {
-	//printf("Writing to file\n");
 	FILE *f = fopen(filename, "a");
 	if (f == NULL)
 	{
@@ -78,6 +70,7 @@ void write_log_to_file(char *filename, struct msg_telemetry_template *msg_teleRX
 		fclose(f);
 }
 
+/* Randy Prozée */
 void print_transmission_data(struct msg_telemetry_template *msg_teleRX)
 {
 	printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
@@ -88,25 +81,19 @@ void print_transmission_data(struct msg_telemetry_template *msg_teleRX)
 	printf("%4d %2d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2, msg_teleRX->P3);
 }
 
+/* Randy Prozée */
 void *send_func (){
 	int8_t c;
 	int8_t next_c;
 	struct msg_pc_template msg_pcTX = {0};;
 	usleep(2000);
 	while(1){
-		// while ((c = term_getchar_nb()) != -1){
-			// kb_input(c);
-			//print_input_kb_js();
-		// }
 		while ((c = term_getchar_nb()) != -1){
-			//printf("c: %c\n", c);
 			next_c = term_getchar_nb();
 			if(next_c == '['){
-				//printf("Arrow\n");
 				kb_input(term_getchar_nb());
 			}
 			else {
-				//printf("Not arrow\n");
 				kb_input(c);
 			}
 		}
@@ -132,8 +119,8 @@ void *send_func (){
 					msg_pcTX.lift 	= inspect_overflow_1ift(kb_lift_offset, js_lift);
 			}
 			else
-				msg_pcTX.lift = inspect_overflow_1ift(kb_lift_offset, js_lift);
-			
+			msg_pcTX.lift = inspect_overflow_1ift(kb_lift_offset, js_lift);
+
 			msg_pcTX.roll 	= inspect_overflow(kb_roll_offset, js_roll);
 			msg_pcTX.pitch 	= inspect_overflow(kb_pitch_offset, js_pitch);
 			msg_pcTX.yaw 		= inspect_overflow(kb_yaw_offset, js_yaw);
@@ -147,6 +134,7 @@ void *send_func (){
 	}
 }
 
+/* Randy Prozée */
 void *receive_func (){
 	int8_t c;
 	int8_t mode_local;
@@ -159,7 +147,6 @@ void *receive_func (){
 
 		  c = rs232_getchar_nb();
 			if (rx.status == INIT && c != HEADER_VALUE && c!= -1) {
-				//printf("DATA:%d\n", c);
 				term_putchar(c);
 			}
 			parse_packet (&rx, c);
@@ -186,7 +173,9 @@ void *receive_func (){
 							}
 							/* Local mode used here */
 							else if(mode_local != SAFE_MODE && rx.data[1] == END_MODE){
+								pthread_mutex_lock(&lock);
 								mode = PANIC_MODE;
+								pthread_mutex_unlock(&lock);
 							}
 							else{
 								pthread_mutex_lock(&lock);
@@ -200,7 +189,6 @@ void *receive_func (){
 								printf("LATENCY = %d\n", diff);
 							}
 
-							//printf("MODE CHANGED CORRECTLY TO %d\n", rx.data[1]);
 						}
 						break;
 					case PACKET_TELEMETRY:
@@ -217,18 +205,9 @@ void *receive_func (){
 
 						print_transmission_data(msg_teleRX);
 
-						// printf("\r%d %4d %4d %4d %4d| ", msg_teleRX->mode, msg_teleRX->lift, msg_teleRX->roll, msg_teleRX->pitch, msg_teleRX->yaw);
-						// printf("%4d %4d %4d %4d| ", msg_teleRX->engine[0],msg_teleRX->engine[1],msg_teleRX->engine[2],msg_teleRX->engine[3]);
-						// printf("%6d %6d %6d| ",msg_teleRX->phi, msg_teleRX->theta, msg_teleRX->psi);
-						// printf("%6d %6d %6d| ",msg_teleRX->sp, msg_teleRX->sq, msg_teleRX->sr);
-						// printf("%6d %6d %6d %d %d| ",msg_teleRX->sax, msg_teleRX->say, msg_teleRX->saz, msg_teleRX->pressure, msg_teleRX->temperature);
-						// printf("%4d %2d %2d %2d\n ",msg_teleRX->bat_volt, msg_teleRX->P, msg_teleRX->P1, msg_teleRX->P2);
-
 						break;
 					case PACKET_LOG:
-						//printf("Log received\n" );
 						msg_logRX = (struct msg_telemetry_template *)&rx.data[0];
-						//print_transmission_data(msg_logRX);
 						write_log_to_file("log-data.csv", msg_logRX);
 						break;
 					default:
@@ -239,6 +218,8 @@ void *receive_func (){
 			}
 	}
 }
+
+/* Randy Prozée */
 /*----------------------------------------------------------------
  * main -- execute terminal
  *----------------------------------------------------------------
@@ -253,11 +234,6 @@ int main(int argc, char **argv)
 	rs232_open();
 	protocol_init();
 	term_puts("Type ^C to exit\n");
-
-		/* discard any incoming text
-	 */
-	// while ((c = rs232_getchar_nb()) != -1)
-	// 	fputc(c,stderr);
 
 	pthread_create(&receive_thread, NULL, *receive_func, NULL);
 	pthread_create(&send_thread, NULL, *send_func, NULL);

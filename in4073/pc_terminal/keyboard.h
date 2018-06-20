@@ -5,7 +5,6 @@
 #include <inttypes.h>
 #include "variable.h"
 #include "../protocol/protocol.h"
-// #include "joystick.h"
 
 /* mode on keyboard */
 #define ZERO      0x30
@@ -28,13 +27,8 @@
 #define W		      0x77
 
 /* abort/exit */
-#define ESC		0x1B
+#define ESC		    0x1B
 
-// /* variables in keyboard.c */
-// char kb_lift_offset;
-// char kb_yaw_offset;
-// char kb_pitch_offset;
-// char kb_roll_offset;
 
 /* functions in keyboard.c */
 void kb_input(uint8_t input_key);

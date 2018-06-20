@@ -15,8 +15,7 @@
 
 #include "in4073.h"
 
-#define BAT_THRESHOLD   500
-//#define BAT_WARNING			501
+#define BAT_THRESHOLD   1050
 
 uint8_t telemetry_packet[MAX_PAYLOAD];
 struct msg_telemetry_template msg_teleTX = {0};
@@ -26,7 +25,37 @@ uint8_t panic_loops = 0;
 uint32_t time_latest_packet_us, cur_time_us;
 uint8_t calibration_flag;
 
+//
+void send_ack(uint8_t *data);
+void send_mode_ack(uint8_t mode);
+void update_telemetry_data(void);
+void send_telemetry(void);
+void handle_transmission_data(void);
+void check_connection(void);
 
+// Update control
+void update_actions_manual_control(void);
+void update_actions_yaw_control(void);
+void update_actions_full_control(void);
+void update_actions_height_control(void);
+
+// Modes
+void end_mode(void);
+void height_control_mode_end(void);
+void manual_mode(void);								// Green, blue, red
+void calibration_mode(void);					// Red, yellow, green
+void yaw_control_mode(void);					// Red, blue
+void full_control_mode(void);					// Red, yellow
+void height_control_mode(void);				// Yellow
+void panic_mode(void);								// Green, blue, yellow
+void safe_mode(void);									// No connection: No lights, connection: Blue, red, yellow
+
+void run_modes(void);
+
+void initialize(void);
+void check_battery(void);
+
+/* Randy Prozée */
 /*------------------------------------------------------------------
  * send_ack -- send acknowledgement
  *------------------------------------------------------------------
@@ -43,6 +72,16 @@ void send_ack(uint8_t *data)
 	}
 }
 
+/* Eline Stenwig */
+void send_mode_ack(uint8_t mode)
+{
+	uint8_t data[2];
+	data[0] = FLAG_1;
+	data[1] = mode;
+	send_ack(data);
+}
+
+/* Randy Prozée */
 void update_telemetry_data(void)
 {
 	msg_teleTX.mode = cur_mode;
@@ -56,17 +95,17 @@ void update_telemetry_data(void)
 	msg_teleTX.engine[2] = ae[2];
 	msg_teleTX.engine[3] = ae[3];
 
-	msg_teleTX.phi = phi; // roll angle
-	msg_teleTX.theta = theta; // pitch angle
-	msg_teleTX.psi = psi; // yaw angle
+	msg_teleTX.phi = phi; 				// roll angle
+	msg_teleTX.theta = theta; 		// pitch angle
+	msg_teleTX.psi = psi; 				// yaw angle
 
-	msg_teleTX.sp = sp; // roll angular rate
-	msg_teleTX.sq = sq; // pitch angular rate
-	msg_teleTX.sr = sr; // yaw angular rate
+	msg_teleTX.sp = sp; 					// roll angular rate
+	msg_teleTX.sq = sq; 					// pitch angular rate
+	msg_teleTX.sr = sr; 					// yaw angular rate
 
-	msg_teleTX.sax = sax; // x direction velocity
-	msg_teleTX.say = say; // y direction velocity
-	msg_teleTX.saz = saz; // z direction velocity
+	msg_teleTX.sax = sax; 				// x direction velocity
+	msg_teleTX.say = say; 				// y direction velocity
+	msg_teleTX.saz = saz; 				// z direction velocity
 
 	msg_teleTX.bat_volt = bat_volt;
 
@@ -80,11 +119,12 @@ void update_telemetry_data(void)
 	msg_teleTX.Time_stamp = get_time_us();
 }
 
+/* Randy Prozée */
 /*----------------------------------------------------------------------
  * send_telemetry -- send the data read from sensors from drone to pc
  *----------------------------------------------------------------------
  */
-void send_telemetry()
+void send_telemetry(void)
 {
 	if (check_telemetry_timer_flag())
 	{
@@ -101,8 +141,9 @@ void send_telemetry()
 	}
 }
 
+/* Randy Prozée */
 /* process the packet from pc */
-void handle_transmission_data()
+void handle_transmission_data(void)
 {
 	if (rx_queue.count){
 		parse_packet (&rx, dequeue(&rx_queue));
@@ -124,15 +165,6 @@ void handle_transmission_data()
 						send_ack(data); //Only if mode change, send ack
 					}
 
-					// Added for latency testing, remove for complete functionality
-					// if (msg_pcRX-> lift > pc_packet.data[1])
-					// {
-					// 	uint8_t data_[2];
-					// 	data_[0] = flags;
-					// 	data_[1] = 26;
-					// 	send_ack(data_); //Only if mode change, send ack
-					// }
-
 					pc_packet.data[1] = msg_pcRX->lift;
 					pc_packet.data[2] = msg_pcRX->pitch;
 					pc_packet.data[3] = msg_pcRX->roll;
@@ -145,22 +177,22 @@ void handle_transmission_data()
 			}
 			time_latest_packet_us = get_time_us();
 		}
-		//send_ack(flags);
 		flags &= ~FLAG_2;
 
 		flags &= ~FLAG_1;
 	}
 }
 
-/* if there is no packet over 600ms, drone will get into the panic mode */
-void check_connection()
+/* Randy Prozée */
+// If there is no packet over 600ms, drone will get into the panic mode
+void check_connection(void)
 {
 	if (check_connection_timer_flag())
 	{
 		uint32_t time_diff;
 		cur_time_us = get_time_us();
 		time_diff = cur_time_us - time_latest_packet_us;
-		if((time_diff > 600000) && cur_mode != SAFE_MODE)
+		if((time_diff > 600000) && cur_mode != SAFE_MODE && cur_mode != END_MODE)
 		{
 			connection = false;
 			statefunc = PANIC_MODE;
@@ -170,7 +202,8 @@ void check_connection()
 	}
 }
 
-void update_actions_manual_control()
+/* Kun Jiang */
+void update_actions_manual_control(void)
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
@@ -185,7 +218,8 @@ void update_actions_manual_control()
 	}
 }
 
-void update_actions_yaw_control()
+/* Kun Jiang */
+void update_actions_yaw_control(void)
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
@@ -200,7 +234,8 @@ void update_actions_yaw_control()
 	}
 }
 
-void update_actions_full_control()
+/* Kun Jiang */
+void update_actions_full_control(void)
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
@@ -215,7 +250,8 @@ void update_actions_full_control()
 	}
 }
 
-void update_actions_height_control()
+/* Kun Jiang */
+void update_actions_height_control(void)
 {
 	if(old_lift != cur_lift || old_pitch != cur_pitch || old_roll != cur_roll || old_yaw != cur_yaw)
 	{
@@ -230,24 +266,24 @@ void update_actions_height_control()
 	}
 }
 
+/* Eline Stenwig */
 void end_mode(void)
 {
 	cur_mode = END_MODE;
-	// read_mission_data();
-	// delete_mission_data();		// Check status from read first?
-	//nrf_delay_ms(10);
+	read_mission_data();
 	demo_done = true;
 }
 
-// Need this one?
+/* Eline Stenwig */
 void height_control_mode_end(void)
 {
 	cur_mode = HEIGHT_CONTROL_MODE_END;
-	printf("End\n");
+	send_mode_ack(prev_mode);
 	statefunc = prev_mode;
 }
 
-void manual_mode()
+/* Kun Jiang */
+void manual_mode(void)
 {
 	cur_mode = MANUAL_MODE;
 
@@ -257,14 +293,8 @@ void manual_mode()
 	nrf_gpio_pin_write(RED,1);
 	nrf_gpio_pin_write(YELLOW,0);
 
-	//check_connection();
-	//check_battery();
-
 	//read the new messages to come
 	handle_transmission_data();
-	//printf("PK_manual|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
-	// if(pc_packet.logging == 1)
-	// 	write_mission_data();
 
 	switch (pc_packet.data[0])
 	{
@@ -285,34 +315,11 @@ void manual_mode()
 	//if there is a new command do the calculations
 	update_actions_manual_control();
 	calculate_rpm(lift_force, roll_moment, pitch_moment, yaw_moment);
-	//while there is no message received wait here and check your connection
-	// while(msg==false && connection==true)
-	// {
-	// 	check_connection();
-	// }
-
-	//read the new messages to come
-	// handle_transmission_data();
-	// //printf("PK_manual|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
-	// switch (pc_packet.data[0])
-	// {
-	// 	case PANIC_MODE:
-	// 		statefunc = PANIC_MODE;
-	// 		break;
-	// 	case MANUAL_MODE:
-	// 		cur_lift=pc_packet.data[1];
-	// 		cur_pitch=pc_packet.data[2];
-	// 		cur_roll=pc_packet.data[3];
-	// 		cur_yaw=pc_packet.data[4];
-	// 		break;
-	// 	default:
-	// 		//printf("Not a valid mode\n");
-	// 		break;
-	// }
 }
 
+/* Eline Stenwig */
 /* For the drone in zero-movement, there is a non-zero offset, so need to measure this offset which can be used to get more accurate sensor value */
-void calibration_mode() // what is the advice from TA about calibration mode? Some initial values from DMP are not right?
+void calibration_mode(void) // what is the advice from TA about calibration mode? Some initial values from DMP are not right?
 {
 	static uint16_t sample = 0;
 	cur_mode = CALIBRATION_MODE;
@@ -324,8 +331,6 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		sr_off_ = 0;
 		phi_off_ = 0;
 		theta_off_ = 0;
-
-		//printf("sp_off: %d\n", sp_off);
 
 		//indicate that you are in calibration mode
 		nrf_gpio_pin_write(RED,1);
@@ -341,13 +346,9 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 		int16_t pre_phi = phi;
 		int16_t pre_theta = theta;
 		get_dmp_data();
-		//printf("dmp\n");
 
 		int16_t diff_phi = pre_phi - phi;
 		int16_t diff_theta = pre_theta - theta;
-		//printf("diff_phi: %ld, diff_theta: %ld\n", diff_phi, diff_theta);
-		//get_dmp_data();
-		//printf("SAMPLE number:%d\n", sample);
 
 		// Need to check if data from DMP are junk data
 		if (CHECK_RANGE(sp, sq, sr, 5) && CHECK_RANGE(0, diff_phi, diff_theta, 2)){
@@ -362,13 +363,11 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 
 	if (sample >= 600){
 		// calculate the average off set for 600 samples
-		printf("Before: %ld\n", phi_off_);
 		sp_off = (int16_t)(sp_off_ / 600);
 		sq_off = (int16_t)(sq_off_ / 600);
 		sr_off = (int16_t)(sr_off_ / 600);
 		phi_off = (int16_t)(phi_off_ / 600);
 		theta_off = (int16_t)(theta_off_ / 600);
-		printf("After: %d\n", phi_off);
 		printf("sp_off: %d, sq_off: %d, sr_off: %d, phi_off: %d, theta_off: %d \n", sp_off,sq_off,sr_off,phi_off,theta_off);
 		printf("CALIBRATION MODE FINISHED! \n");
 		statefunc = SAFE_MODE;
@@ -377,7 +376,8 @@ void calibration_mode() // what is the advice from TA about calibration mode? So
 	}
 }
 
-void yaw_control_mode() // also need calibration mode to read sr_off
+/* Kun Jiang */
+void yaw_control_mode(void)
 {
 	cur_mode = YAW_CONTROL_MODE;
 
@@ -387,8 +387,6 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	nrf_gpio_pin_write(YELLOW,0);
 	nrf_gpio_pin_write(GREEN,0);
 
-
-	//check_connection();
 	if(check_sensor_int_flag())
 	{
 		get_dmp_data();
@@ -396,10 +394,6 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	}
 
 	handle_transmission_data();
-
-	// if(pc_packet.logging == 1)
-	// 	write_mission_data();
-
 
 	switch (pc_packet.data[0])
 	{
@@ -440,14 +434,15 @@ void yaw_control_mode() // also need calibration mode to read sr_off
 	update_actions_yaw_control();
 }
 
-void full_control_mode()
+/* Kun Jiang */
+void full_control_mode(void)
 {
 	cur_mode = FULL_CONTROL_MODE;
 
 	//indicate that you are in full control mode
 	nrf_gpio_pin_write(RED,1);
 	nrf_gpio_pin_write(YELLOW,1);
-	nrf_gpio_pin_write(BLUE,0); // yellow and gree lights are on
+	nrf_gpio_pin_write(BLUE,0);
 	nrf_gpio_pin_write(GREEN,0);
 
 	if(check_sensor_int_flag())
@@ -460,9 +455,6 @@ void full_control_mode()
 	}   // cascaded p (coupled): p2 * (p1 * (roll_moment - (phi - phi_off)) - (sp - sp_off))
 
 	handle_transmission_data();
-
-	// if(pc_packet.logging == 1)
-	// 	write_mission_data();
 
 	switch(pc_packet.data[0])
 	{
@@ -536,7 +528,6 @@ void full_control_mode()
 			// Change p's?
 			prev_mode = FULL_CONTROL_MODE;
 			statefunc = HEIGHT_CONTROL_MODE;
-			printf("Full->Height\n");
 			break;
 		default:
 			//printf("Not a valid mode!!\n");
@@ -547,7 +538,8 @@ void full_control_mode()
 	update_actions_full_control();
 }
 
-void height_control_mode()
+/* Eline Stenwig - switching to/from the mode, not control*/
+void height_control_mode(void)
 {
 	cur_mode = HEIGHT_CONTROL_MODE;
 
@@ -555,18 +547,17 @@ void height_control_mode()
 	nrf_gpio_pin_write(RED,0);
 	nrf_gpio_pin_write(YELLOW,1);
 	nrf_gpio_pin_write(GREEN,0);
+	nrf_gpio_pin_write(BLUE,0);
 
 	//check_connection();
 	if(check_sensor_int_flag())
 	{
 		read_baro();
+		// This part is not done
 		calculate_rpm(p3 * (lift_force - pressure), roll_moment, pitch_moment, yaw_moment); // Not sure that whether the sr should multiply a constant or not
 	}
 
 	handle_transmission_data();
-
-	if(pc_packet.logging == 1)
-		write_mission_data();
 
 	switch (pc_packet.data[0])
 	{
@@ -576,17 +567,14 @@ void height_control_mode()
 			break;
 		case HEIGHT_CONTROL_MODE:
 			if(cur_lift != pc_packet.data[1]){
-				printf("Cur_lift: %d\n", cur_lift);
-				printf("Received: %d\n", pc_packet.data[1]);
 				cur_lift = pc_packet.data[1];			//?
-				statefunc = prev_mode;
-				printf("Prev_mode: %d\n", prev_mode);
+				statefunc = HEIGHT_CONTROL_MODE_END;
 				break;
 			}
 			cur_pitch = pc_packet.data[2];
 			cur_roll = pc_packet.data[3];
 			cur_yaw = pc_packet.data[4];
-			
+
 			if(pc_packet.p_adjust == P3_HEIGHT_UP)
 			{
 				p3 += 1;
@@ -609,6 +597,9 @@ void height_control_mode()
 		case HEIGHT_CONTROL_MODE_END:
 			statefunc = HEIGHT_CONTROL_MODE_END;
 			break;
+		case FULL_CONTROL_MODE:
+			statefunc = FULL_CONTROL_MODE;
+			break;
 		default:
 			//printf("Not a valid mode\n");
 			break;
@@ -618,12 +609,10 @@ void height_control_mode()
 	update_actions_height_control();
 }
 
+/* Kun Jiang */
 //panic mode state makis
-void panic_mode()
+void panic_mode(void)
 {
-	// if(cur_mode == SAFE_MODE){
-	// 	return;
-	// }
 	cur_mode = PANIC_MODE;
 
 	//indicate that you are in panic mode
@@ -650,8 +639,6 @@ void panic_mode()
 					ae[i] = 0;
 			}
 			run_filters_and_control();
-			//nrf_delay_ms(200);
-			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
 		}
 		else if (panic_loops > MIN_PANIC_LOOPS)
 		{
@@ -669,13 +656,6 @@ void panic_mode()
 			pitch_moment = 0;
 			yaw_moment = 0;
 
-
-			//print your changed state
-			//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",cur_mode,ae[0],ae[1],ae[2],ae[3],bat_volt);
-
-			//after 2 seconds get to safe mode
-			//nrf_delay_ms(2000);
-
 			//fixes a bug, doesn't care to check connection going to safe mode anyway
 			time_latest_packet_us = get_time_us();
 
@@ -688,8 +668,9 @@ void panic_mode()
 	}
 }
 
+/* Kun Jiang */
 //safe mode state makis
-void safe_mode()
+void safe_mode(void)
 {
 	cur_mode = SAFE_MODE;
 
@@ -721,7 +702,6 @@ void safe_mode()
 	if(battery == true && connection == true)
 	{
 		handle_transmission_data();
-		//printf("PK_safe|%d|%d|%d|%d|%d|\n", pc_packet.data[0], pc_packet.data[1], pc_packet.data[2], pc_packet.data[3], pc_packet.data[4]);
 		if(pc_packet.p_adjust == LOGGING_DATA)
 		{
 			read_mission_data();
@@ -737,8 +717,6 @@ void safe_mode()
 			case MANUAL_MODE:
 				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
 				{
-					//print your changed state
-					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",MANUAL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
 					statefunc = MANUAL_MODE;
 				}
 				break;
@@ -748,18 +726,14 @@ void safe_mode()
 				statefunc = CALIBRATION_MODE;
 				break;
 			case YAW_CONTROL_MODE:
-			//printf("Calibration_flag %d\n", calibration_flag);
-				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0 /*&& calibration_flag*/)
+				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
 				{
-					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, bat_volt=%d \n",YAW_CONTROL_MODE,ae[0],ae[1],ae[2],ae[3],bat_volt);
 					statefunc = YAW_CONTROL_MODE;
 				}
 				break;
 			case FULL_CONTROL_MODE:
-			//printf("Calibration_flag %d\n", calibration_flag);
-				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0 /*&& calibration_flag*/)
+				if(pc_packet.data[1] == 0 && pc_packet.data[2] == 0 && pc_packet.data[3] == 0 && pc_packet.data[4] == 0)
 				{
-					//printf("DRONE SIDE: mode=%d, ae[0]=%d, ae[1]=%d, ae[2]=%d, ae[3]=%d, p=%d, p1=%d, p2=%d, bat_volt=%d \n", cur_mode, ae[0],ae[1],ae[2],ae[3],p,p1,p2,bat_volt);
 					statefunc = FULL_CONTROL_MODE;
 				}
 				break;
@@ -770,10 +744,8 @@ void safe_mode()
 	}
 }
 
-void initialize()
+void initialize(void)
 {
-	//message flag initialization
-	//msg=false;
 
 	//drone modules initialization
 	uart_init();
@@ -785,10 +757,8 @@ void initialize()
 	baro_init();
 	spi_flash_init();
 	adc_request_sample();
-	//ble_init();
+
 	demo_done = false;
-	//battery = true;
-	//adc_request_sample();
 
 	//initialise the pc_packet struct to safe values, just in case
 	pc_packet.data[0] = SAFE_MODE;
@@ -827,18 +797,16 @@ void initialize()
 
 	calibration_flag = false;
 
-	// p_ctrl=10;
 	//first get to safe mode
 	statefunc = SAFE_MODE;;
-	//set_mode(SAFE_MODE);
 }
 
-void check_battery()
+/* Eline Stenwig */
+void check_battery(void)
 {
 	//check battery voltage
 	if (check_timer_flag())
 	{
-		//clear_timer_flag();
 		adc_request_sample();
 
 		if ((bat_volt < BAT_THRESHOLD) && battery)
@@ -846,10 +814,7 @@ void check_battery()
 			battery = false;
 			if(statefunc != SAFE_MODE){
 				statefunc = PANIC_MODE;
-				uint8_t data[2];
-				data[0] = FLAG_1;
-				data[1] = PANIC_MODE;
-				send_ack(data); //Only if mode change, send ack
+				send_mode_ack(PANIC_MODE);
 			}
 		}
 		else if ((bat_volt > BAT_THRESHOLD) && !battery)
@@ -860,7 +825,8 @@ void check_battery()
 	}
 }
 
-void run_modes()
+/* Kun Jiang */
+void run_modes(void)
 {
 	switch (statefunc) {
 		case END_MODE:
@@ -904,28 +870,16 @@ int main(void){
 
 	initialize();
 
-	//nrf_delay_ms(2);
-
 	while (!demo_done){
 
 		check_battery();
 
-		//get to the state
-		//(*statefunc)();
-		// if(check_sensor_int_flag())
-		// {
-		// 	read_baro();
-		// }
 		if(pc_packet.logging == 1)
+		{
 			write_mission_data();
-		
-		run_modes();
+		}
 
-		// if(check_log_timer_flag())
-		// {
-		// 	write_mission_data();
-		// 	clear_log_timer_flag();
-		// }
+		run_modes();
 
 		send_telemetry();
 		check_connection();

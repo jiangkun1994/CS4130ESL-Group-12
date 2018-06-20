@@ -15,19 +15,19 @@
 #define MIN_RPM 204800 // 200 RPM
 #define MAX_RPM 614400 // 600 RPM
 
+// Local functions
+void update_motors(void);
+void run_filters_and_control(void);
+
 void update_motors(void)
 {
-	// NRF_TIMER1->CC[0] = 1000 + ae[0];
-	// NRF_TIMER1->CC[1] = 1000 + ae[1];
-	// NRF_TIMER1->CC[2] = 1000 + ae[2];
-	// NRF_TIMER1->CC[3] = 1000 + ae[3];
 	motor[0] = ae[0];
 	motor[1] = ae[1];
 	motor[2] = ae[2];
 	motor[3] = ae[3];
 }
 
-void run_filters_and_control()
+void run_filters_and_control(void)
 {
 	// fancy stuff here
 	// control loops and/or filters
@@ -36,13 +36,10 @@ void run_filters_and_control()
 	update_motors();
 }
 
+/* Kun Jiang */
 //in this function calculate the values for the ae[] array makis
 void calculate_rpm(int32_t Z, int32_t L, int32_t M, int32_t N)
 {
-	// Z = lift
-	// L = roll
-	// M = pitch
-	// N = yaw
 	int ae1[4],i;
 	//if there is lift force calculate ae[] array values
 	if(Z>0)
@@ -52,18 +49,6 @@ void calculate_rpm(int32_t Z, int32_t L, int32_t M, int32_t N)
 		ae1[1] = ((Z - 2*L + N) >> 2) + MIN_RPM;
 		ae1[2] = ((Z - 2*M - N) >> 2) + MIN_RPM;
 		ae1[3] = ((Z + 2*L + N) >> 2) + MIN_RPM;
-
-
-		// ae1[0] = 0.25*(Z + 2*M - N); // test without min RPM
-		// ae1[1] = 0.25*(Z - 2*L + N);
-		// ae1[2] = 0.25*(Z - 2*M - N);
-		// ae1[3] = 0.25*(Z + 2*L + N);
-
-		// ae1[0] = Z + M - N;
-		// ae1[1] = Z - L + N;
-		// ae1[2] = Z - M - N;
-		// ae1[3] = Z + L + N;
-		//printf("z:%d \t l:%d \t m:%d \t n:%d\n", Z, L, M, N);
 
 		//minimum rpm
 		for(i=0;i<4;i++)

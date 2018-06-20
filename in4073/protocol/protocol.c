@@ -1,4 +1,8 @@
+/* All functions: Randy Prozée */
 #include "protocol.h"
+
+// Local functions
+uint8_t crc_high_first(uint8_t *ptr, unsigned char len);
 
 void protocol_init(){
     flags = 0;
@@ -48,18 +52,6 @@ void create_ack(uint8_t length, uint8_t *data, uint8_t *ack_packet){
     ack_packet[4] = data[1];       //MODE
     ack_packet[5] = crc_high_first((uint8_t*)data, length);
 }
-
-// void create_telemetry_packet(uint8_t length, int8_t *data, uint8_t *telemetry_packet){
-//     int i = 0;
-//     telemetry_packet[0] = HEADER_VALUE;
-//     telemetry_packet[1] = length;
-//     telemetry_packet[2] = PACKET_TELEMETRY;
-//     while(i < length){
-//         telemetry_packet[i+3] = (uint8_t)data[i];
-//         i++;
-//     }
-//     telemetry_packet[i+3] = crc_high_first((uint8_t*)data, length);
-// }
 
 uint8_t parse_packet(struct packet *rx, uint8_t c){
     uint8_t correct = 1;
